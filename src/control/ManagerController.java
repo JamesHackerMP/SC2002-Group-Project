@@ -27,12 +27,6 @@ public class ManagerController implements ProjectManagementManagerController,
 
     @Override
     public boolean createProject(HDBManager manager, Project project) {
-        try {
-            projectController.validateManagerProjects(manager.getName());
-        } catch (IllegalStateException e) {
-            System.out.println("Error: " + e.getMessage());
-            return false;
-        }
     
         List<Project> currentProjects = projectController.getProjectsByManager(manager.getName());
         for (Project p : currentProjects) {
@@ -65,13 +59,9 @@ public class ManagerController implements ProjectManagementManagerController,
     }
 
     @Override
-    public boolean toggleProjectVisibility(String projectName, boolean visible) {
+    public void toggleProjectVisibility(String projectName, boolean visible) {
         Project project = projectController.getProject(projectName);
-        if (project == null) {
-            return false;
-        }
         project.setVisible(visible);
-        return true;
     }
 
     @Override

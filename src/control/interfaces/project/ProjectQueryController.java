@@ -8,6 +8,7 @@ public interface ProjectQueryController {
     List<Project> getAllProjects();
     List<Project> getVisibleProjects();
     List<Project> getProjectsByManager(String managerName);
+    Project getActiveProjectByManager(String managerName);
     List<Project> getProjectsByOfficer(String officerName);
     Project getCurrentProjectByOfficer(String officerName);
     boolean projectExists(String projectName);

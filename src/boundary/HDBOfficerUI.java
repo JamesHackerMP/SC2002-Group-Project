@@ -145,9 +145,9 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
 
     @Override
     public void processFlatBooking(HDBOfficer officer) {
-        List<Project> assignedProjects = projectController.getProjectsByOfficer(officer.getName());
-        if (assignedProjects == null || assignedProjects.isEmpty()) {
-            System.out.println("You are not assigned to any project.");
+        Project currentProject = projectController.getCurrentProjectByOfficer(officer.getName());
+        if (currentProject == null) {
+            System.out.println("You are not assigned to any project that opens for applying.");
             return;
         }
 
@@ -155,7 +155,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
         List<Application> projectApplications = new ArrayList<>();
 
         for (Application application : applications) {
-            if (application.getProjectName().equals(projectController.getCurrentProjectByOfficer(officer.getName()).getName()) &&
+            if (application.getProjectName().equals(currentProject.getName()) &&
                 application.getStatus() == Application.Status.SUCCESSFUL) {
                 projectApplications.add(application);
             }
@@ -187,29 +187,70 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
 
         Application selectedApplication = projectApplications.get(choice - 1);
         User applicant = authController.getUser(selectedApplication.getApplicantName());
-        Project project = projectController.getCurrentProjectByOfficer(officer.getName());
+        String flatType;
 
         System.out.println("\nAvailable Flat Types:");
-        if (project.getTwoRoomUnits() > 0) {
+        if (applicant.getMaritalStatus().equals("Single")) {
             System.out.println("1. 2-Room");
-        }
-        if (project.getThreeRoomUnits() > 0 & applicant.getMaritalStatus().equalsIgnoreCase("Married")) {
-            System.out.println("2. 3-Room");
-        }
-        System.out.println("0. Cancel");
-    
-        System.out.print("Select flat type to book (Enter number): ");
-        int flatChoice = getMenuChoice();
-
-        String flatType = switch (flatChoice) {
-            case 1 -> "2-Room";
-            case 2 -> "3-Room";
-            default -> null;
-        };
-
-        if (flatType == null) {
-            System.out.println("Invalid choice.");
-            return;
+            System.out.println("0. Cancel");
+            
+            System.out.print("Select flat type to book (Enter number): ");
+            int flatChoice = getMenuChoice();
+            
+            switch (flatChoice) {
+                case 0:
+                    System.out.println("Booking canceled.");
+                    return;
+                case 1:
+                    flatType = "2-Room";
+                    break;
+                default:
+                    System.out.println("Invalid choice.");
+                    return;
+            }
+        } else {
+            boolean hasTwoRoom = currentProject.getTwoRoomUnits() > 0;
+            boolean hasThreeRoom = currentProject.getThreeRoomUnits() > 0;
+            
+            if (hasTwoRoom && hasThreeRoom) {
+                System.out.println("1. 2-Room");
+                System.out.println("2. 3-Room");
+            } else if (hasTwoRoom) {
+                System.out.println("1. 2-Room");
+            } else if (hasThreeRoom) {
+                System.out.println("1. 3-Room");
+            }
+            System.out.println("0. Cancel");
+            
+            System.out.print("Select flat type to book (Enter number): ");
+            int flatChoice = getMenuChoice();
+            
+            switch (flatChoice) {
+                case 0:
+                    System.out.println("Booking canceled.");
+                    return;
+                case 1:
+                    if (hasTwoRoom) {
+                        flatType = "2-Room";
+                    } else if (hasThreeRoom) {
+                        flatType = "3-Room";
+                    } else {
+                        System.out.println("Invalid choice.");
+                        return;
+                    }
+                    break;
+                case 2:
+                    if (hasTwoRoom && hasThreeRoom) {
+                        flatType = "3-Room";
+                    } else {
+                        System.out.println("Invalid choice.");
+                        return;
+                    }
+                    break;
+                default:
+                    System.out.println("Invalid choice.");
+                    return;
+            }
         }
 
         if (applicationController.bookFlat(selectedApplication.getApplicantName(), flatType, officer.getName())) {
@@ -221,23 +262,30 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
 
     @Override
     public void generateBookingReceipt(HDBOfficer officer) {
-        if (projectController.getCurrentProjectByOfficer(officer.getName()) == null) {
-            System.out.println("You must be assigned to a project to generate receipts.");
+        List<Project> assignedProjects = projectController.getProjectsByOfficer(officer.getName());
+    
+        if ((assignedProjects == null || assignedProjects.isEmpty())) {
+            System.out.println("You are not assigned to any project.");
             return;
         }
 
         List<Application> applications = applicationController.getAllApplications();
         List<Application> bookedApplications = new ArrayList<>();
-
-        for (Application application : applications) {
-            if (application.getProjectName().equals(projectController.getCurrentProjectByOfficer(officer.getName()).getName()) &&
-                application.getStatus() == Application.Status.BOOKED) {
-                bookedApplications.add(application);
+        
+        if (assignedProjects != null && !assignedProjects.isEmpty()) {
+            for (Application application : applications) {
+                for (Project project : assignedProjects) {
+                    if (application.getProjectName().equals(project.getName()) && 
+                        application.getStatus() == Application.Status.BOOKED) {
+                        bookedApplications.add(application);
+                        break;
+                    }
+                }
             }
         }
-
+        
         if (bookedApplications.isEmpty()) {
-            System.out.println("No completed bookings found for this project.");
+            System.out.println("No completed bookings found for your assigned projects.");
             return;
         }
 
@@ -276,12 +324,13 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
 
     @Override
     public void manageEnquiries(HDBOfficer officer) {
-        if (projectController.getCurrentProjectByOfficer(officer.getName()) == null) {
-            System.out.println("You must be assigned to a project to manage enquiries.");
+        Project currentProject = projectController.getCurrentProjectByOfficer(officer.getName());
+        if (currentProject == null) {
+            System.out.println("You are not assigned to any project that opens for applying that opens for applying.");
             return;
         }
 
-        List<Enquiry> enquiries = enquiryController.getEnquiriesByProject(projectController.getCurrentProjectByOfficer(officer.getName()).getName());
+        List<Enquiry> enquiries = enquiryController.getEnquiriesByProject(currentProject.getName());
 
         if (enquiries.isEmpty()) {
             System.out.println("No enquiries found for this project.");
@@ -305,17 +354,17 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
         }
         System.out.println("0. Cancel");
 
-        int choice = -1;
-        while (choice < 0 || choice > enquiries.size()) {
+        int choice;
+        while (true) {
             System.out.print("\nSelect an enquiry to reply (Enter number): ");
-            try {
-                choice = Integer.parseInt(scanner.nextLine());
-                if (choice == 0) return;
-                if (choice < 1 || choice > enquiries.size()) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
+            choice = getMenuChoice();
+            
+            if (choice == 0) return;
+            
+            if (choice < 0 || choice > enquiries.size()) {
+                System.out.println("Invalid selection. Please try again.");
+            } else if (choice >= 1 && choice <= enquiries.size()) {
+                break;
             }
         }
     

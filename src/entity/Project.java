@@ -50,10 +50,6 @@ public class Project implements ProjectDetails, DateBound, OfficerAssignable {
     }
 
     public boolean bookFlat(String flatType, String applicantName, String officerName) {
-        if (!officers.contains(officerName)) {
-            System.out.println("You must be assigned as an officer to book a flat.");
-            return false;
-        }
 
         for (Flat flat : flats) {
             if (flat.getType().equals(flatType) && !flat.isBooked()) {
@@ -67,7 +63,6 @@ public class Project implements ProjectDetails, DateBound, OfficerAssignable {
                 return true;
             }
         }
-        System.out.println("No available flats for the selected type.");
         return false;
     }
 

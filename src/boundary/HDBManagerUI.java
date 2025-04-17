@@ -65,10 +65,20 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
 
     @Override
     public void createProject(HDBManager manager) {
+        if (projectController.getActiveProjectByManager(manager.getName()) != null) {
+            System.out.println("You already have an active project.");
+            return;
+        }
+
         System.out.println("\n=== Create New Project ===");
 
         System.out.print("Project Name: ");
         String name = scanner.nextLine();
+
+        if (projectController.getAllProjects().stream().anyMatch(p -> p.getName().equals(name))) {
+            System.out.println("There is a project has the same name.");
+            return;
+        }
 
         System.out.print("Neighborhood: ");
         String neighborhood = scanner.nextLine();
@@ -105,7 +115,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         if (projectController.createProject(newProject)) {
             System.out.println("Project created successfully!");
         } else {
-            System.out.println("Failed to create project. You may already be managing another project during this period.");
+            System.out.println("Failed to create project. You might have a active project at that time.");
         }
     }
 
@@ -228,28 +238,33 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         }
         System.out.println("0. Cancel");
     
-        int choice = -1;
-        while (choice < 0 || choice > managerProjects.size()) {
+        int choice;
+        while (true) {
             System.out.print("\nSelect a project to toggle visibility (Enter number): ");
-            try {
-                choice = Integer.parseInt(scanner.nextLine());
-                if (choice == 0) return;
-                if (choice < 1 || choice > managerProjects.size()) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
+
+            choice = getMenuChoice();
+            
+            if (choice == 0) return;
+            
+            if (choice < 1 || choice > managerProjects.size()) {
+                System.out.println("Invalid selection. Please try again.");
+            } else {
+                break;
             }
         }
     
         Project selectedProject = managerProjects.get(choice - 1);
-    
+        Project activeProject = projectController.getActiveProjectByManager(manager.getName());
         boolean newVisibility = !selectedProject.isVisible();
-        if (managerController.toggleProjectVisibility(selectedProject.getName(), newVisibility)) {
-            System.out.println("Project visibility set to: " + (newVisibility ? "Visible" : "Hidden"));
-        } else {
-            System.out.println("Failed to update visibility.");
-        }
+
+        if (newVisibility && activeProject != null 
+        && selectedProject.isOpenForApplication()) {
+            System.out.println("Failed to update visibility. You cannot have two active project.");
+            }
+
+        managerController.toggleProjectVisibility(selectedProject.getName(), newVisibility);
+        System.out.println("Project visibility set to: " + (newVisibility ? "Visible" : "Hidden"));
+
     }
 
     @Override
@@ -321,16 +336,17 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             return;
         }
     
-        int projectChoice = -1;
-        while (projectChoice < 1 || projectChoice > projectsWithPendingOfficers.size()) {
+        int projectChoice;
+        while (true) {
             System.out.print("\nSelect a project to process (Enter number): ");
-            try {
-                projectChoice = Integer.parseInt(scanner.nextLine());
-                if (projectChoice < 1 || projectChoice > projectsWithPendingOfficers.size()) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
+            projectChoice = getMenuChoice();
+            
+            if (projectChoice == 0) return;
+            
+            if (projectChoice < 1 || projectChoice > projectsWithPendingOfficers.size()) {
+                System.out.println("Invalid selection. Please try again.");
+            } else {
+                break;
             }
         }
     
@@ -342,16 +358,17 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             System.out.println((i + 1) + ". " + pendingOfficers.get(i));
         }
     
-        int officerChoice = -1;
-        while (officerChoice < 1 || officerChoice > pendingOfficers.size()) {
+        int officerChoice;
+        while (true) {
             System.out.print("\nSelect an officer to process (Enter number): ");
-            try {
-                officerChoice = Integer.parseInt(scanner.nextLine());
-                if (officerChoice < 1 || officerChoice > pendingOfficers.size()) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
+            officerChoice = getMenuChoice();
+            
+            if (officerChoice == 0) return;
+            
+            if (officerChoice < 1 || officerChoice > pendingOfficers.size()) {
+                System.out.println("Invalid selection. Please try again.");
+            } else {
+                break;
             }
         }
     
@@ -398,21 +415,15 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                             a.getStatus() == Application.Status.PENDING)
                     .count();
     
-            long withdrawalRequestsCount = applicationController.getAllApplications().stream()
-                    .filter(a -> a.getProjectName().equals(project.getName()) &&
-                            a.isWithdrawalRequested())
-                    .count();
-    
-            if (pendingApplicationsCount > 0 || withdrawalRequestsCount > 0) {
+            if (pendingApplicationsCount > 0) {
                 projectsWithPendingActions.add(project);
                 System.out.println("\nProject: " + project.getName());
                 System.out.println("Pending Applications: " + pendingApplicationsCount);
-                System.out.println("Withdrawal Requests: " + withdrawalRequestsCount);
             }
         }
     
         if (projectsWithPendingActions.isEmpty()) {
-            System.out.println("No pending applications or withdrawal requests for your projects.");
+            System.out.println("No pending applications for your projects.");
             return;
         }
     
@@ -422,46 +433,22 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         }
         System.out.println("0. Cancel");
     
-        int projectChoice = -1;
-        while (projectChoice < 0 || projectChoice > projectsWithPendingActions.size()) {
+        int projectChoice;
+        while (true) {
             System.out.print("Enter your choice: ");
-            try {
-                projectChoice = Integer.parseInt(scanner.nextLine());
-                if (projectChoice == 0) return;
-                if (projectChoice < 1 || projectChoice > projectsWithPendingActions.size()) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
+            projectChoice = getMenuChoice();
+            
+            if (projectChoice == 0) return;
+            
+            if (projectChoice < 1 || projectChoice > projectsWithPendingActions.size()) {
+                System.out.println("Invalid selection. Please try again.");
+            } else {
+                break;
             }
         }
     
         Project selectedProject = projectsWithPendingActions.get(projectChoice - 1);
-    
-        System.out.println("\n=== Process Options for " + selectedProject.getName() + " ===");
-        System.out.println("1. Process Applications");
-        System.out.println("2. Process Withdrawal Requests");
-        System.out.println("0. Cancel");
-    
-        int processChoice = -1;
-        while (processChoice < 0 || processChoice > 2) {
-            System.out.print("Enter your choice: ");
-            try {
-                processChoice = Integer.parseInt(scanner.nextLine());
-                if (processChoice == 0) return;
-                if (processChoice < 1 || processChoice > 2) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
-            }
-        }
-    
-        if (processChoice == 1) {
-            processPendingApplications(selectedProject);
-        } else if (processChoice == 2) {
-            processWithdrawalRequests(selectedProject);
-        }
+        processPendingApplications(selectedProject);
     }
     
     @Override
@@ -483,17 +470,17 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         }
         System.out.println("0. Cancel");
     
-        int appChoice = -1;
-        while (appChoice < 0 || appChoice > pendingApps.size()) {
+        int appChoice;
+        while (true) {
             System.out.print("Enter your choice: ");
-            try {
-                appChoice = Integer.parseInt(scanner.nextLine());
-                if (appChoice == 0) return;
-                if (appChoice < 1 || appChoice > pendingApps.size()) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
+            appChoice = getMenuChoice();
+            
+            if (appChoice == 0) return;
+            
+            if (appChoice < 1 || appChoice > pendingApps.size()) {
+                System.out.println("Invalid selection. Please try again.");
+            } else {
+                break;
             }
         }
     
@@ -527,60 +514,6 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                 } else {
                     System.out.println("Failed to reject application.");
                 }
-            }
-            default -> System.out.println("Invalid decision. No action taken.");
-        }
-    }
-    
-    @Override
-    public void processWithdrawalRequests(Project project) {
-        System.out.println("\n=== Withdrawal Requests for " + project.getName() + " ===");
-        List<Application> withdrawalRequests = applicationController.getAllApplications().stream()
-                .filter(a -> a.getProjectName().equals(project.getName()) &&
-                        a.isWithdrawalRequested())
-                .toList();
-    
-        if (withdrawalRequests.isEmpty()) {
-            System.out.println("No withdrawal requests for this project.");
-            return;
-        }
-    
-        for (int i = 0; i < withdrawalRequests.size(); i++) {
-            Application app = withdrawalRequests.get(i);
-            System.out.println((i + 1) + ". Applicant: " + app.getApplicantName());
-        }
-        System.out.println("0. Cancel");
-    
-        int withdrawChoice = -1;
-        while (withdrawChoice < 0 || withdrawChoice > withdrawalRequests.size()) {
-            System.out.print("Enter your choice: ");
-            try {
-                withdrawChoice = Integer.parseInt(scanner.nextLine());
-                if (withdrawChoice == 0) return;
-                if (withdrawChoice < 1 || withdrawChoice > withdrawalRequests.size()) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
-            }
-        }
-    
-        Application selectedRequest = withdrawalRequests.get(withdrawChoice - 1);
-    
-        System.out.print("Approve (A) or Reject (R)? ");
-        String decision = scanner.nextLine().trim().toUpperCase();
-    
-        switch (decision) {
-            case "A" -> {
-                if (applicationController.approveWithdrawal(selectedRequest.getApplicantName())) {
-                    System.out.println("Withdrawal approved.");
-                } else {
-                    System.out.println("Failed to approve withdrawal.");
-                }
-            }
-            case "R" -> {
-                selectedRequest.setWithdrawalRequested(false);
-                System.out.println("Withdrawal request rejected.");
             }
             default -> System.out.println("Invalid decision. No action taken.");
         }
@@ -749,17 +682,17 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         }
         System.out.println("0. Cancel");
     
-        int choice = -1;
-        while (choice < 0 || choice > allEnquiries.size()) {
+        int choice;
+        while (true) {
             System.out.print("\nSelect an enquiry to reply (Enter number): ");
-            try {
-                choice = Integer.parseInt(scanner.nextLine());
-                if (choice == 0) return;
-                if (choice < 1 || choice > allEnquiries.size()) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
+            choice = getMenuChoice();
+            
+            if (choice == 0) return;
+            
+            if (choice < 1 || choice > allEnquiries.size()) {
+                System.out.println("Invalid selection. Please try again.");
+            } else {
+                break;
             }
         }
     

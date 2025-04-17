@@ -99,9 +99,6 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
 
     @Override
     public boolean createProject(Project project) {
-        if (projects.containsKey(project.getName())) {
-            return false;
-        }
         projects.put(project.getName(), project);
         return saveProjects();
     }
@@ -133,6 +130,16 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
             }
         }
         return managerProjects;
+    }
+
+    @Override
+    public Project getActiveProjectByManager(String managerName) {
+        return projects.values().stream()
+            .filter(project -> project.getManager().equalsIgnoreCase(managerName) && 
+                    project.isOpenForApplication() &&
+                    project.isVisible())
+            .findFirst()
+            .orElse(null);
     }
 
     @Override

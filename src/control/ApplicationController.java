@@ -56,7 +56,9 @@ public class ApplicationController implements ApplicationEligibilityController,
 
     @Override
     public boolean applyForProject(User applicant, String projectName, String flatTypeApply) {
-        if (applications.containsKey(applicant.getName())) {
+        if (applications.values().stream()
+            .anyMatch(app -> app.getApplicantName().equals(applicant.getName()) && 
+                 app.getStatus() != Application.Status.UNSUCCESSFUL)) {
             return false;
         }
        
@@ -64,6 +66,10 @@ public class ApplicationController implements ApplicationEligibilityController,
             return false;
         }
         
+        applications.values().removeIf(app -> 
+        app.getApplicantName().equals(applicant.getName()) && 
+        app.getStatus() == Application.Status.UNSUCCESSFUL);
+
         Application application = new Application(applicant.getName(), projectName, flatTypeApply);
         applications.put(applicant.getName(), application);
         return true;

@@ -5,5 +5,5 @@ import entity.Project;
 
 public interface OfficerManagementController {
     boolean createProject(HDBManager manager, Project project);
-    boolean toggleProjectVisibility(String projectName, boolean visible);
+    void toggleProjectVisibility(String projectName, boolean visible);
 }

@@ -3,6 +3,7 @@ package boundary;
 import boundary.interfaces.applicant.*;
 import control.*;
 import entity.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -111,36 +112,51 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
         String flatTypeApply;
 
         if (user.getMaritalStatus().equalsIgnoreCase("Married")) {
+            boolean hasTwoRoom = selectedProject.getTwoRoomUnits() > 0;
+            boolean hasThreeRoom = selectedProject.getThreeRoomUnits() > 0;
             
-            if (selectedProject.getTwoRoomUnits() > 0 & selectedProject.getThreeRoomUnits() > 0) {
+            if (hasTwoRoom && hasThreeRoom) {
                 System.out.println("1. 2-Room");
                 System.out.println("2. 3-Room");
-            } else if (selectedProject.getTwoRoomUnits() > 0) {
+            } else if (hasTwoRoom) {
                 System.out.println("1. 2-Room");
-            } else {
+            } else if (hasThreeRoom) {
                 System.out.println("1. 3-Room");
             }
             System.out.println("0. Cancel");
-
+        
             System.out.println("Select a flat type to apply (Enter number): ");
             choice = getMenuChoice();
-            if (choice == 0) {
-                System.out.println("Application canceled.");
-                return;
+            
+            switch (choice) {
+                case 0:
+                    System.out.println("Application canceled.");
+                    return;
+                case 1:
+                    if (hasTwoRoom) {
+                        flatTypeApply = "2-room";
+                    } else if (hasThreeRoom) {
+                        flatTypeApply = "3-room";
+                    } else {
+                        System.out.println("Invalid choice. Application canceled.");
+                        return;
+                    }
+                    break;
+                case 2:
+                    if (hasTwoRoom && hasThreeRoom) {
+                        flatTypeApply = "3-room";
+                    } else {
+                        System.out.println("Invalid choice. Application canceled.");
+                        return;
+                    }
+                    break;
+                default:
+                    System.out.println("Invalid choice. Application canceled.");
+                    return;
             }
-            if (choice == 1) {
-                if (selectedProject.getTwoRoomUnits() > 0) {
-                    flatTypeApply = "2-room";
-                }
-                else {
-                    flatTypeApply = "3-room";
-                }
-            }
-            else {
-                flatTypeApply = "3-room";
-            }
-
-        } else {flatTypeApply = "2-room";}
+        } else {
+            flatTypeApply = "2-room";
+        }
 
         if (applicationController.applyForProject(user, selectedProject.getName(), flatTypeApply)) {
             System.out.println("Application submitted successfully!");
@@ -174,7 +190,7 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
     @Override
     public void withdrawApplication(User user) {
         if (applicationController.requestWithdrawal(user.getName())) {
-            System.out.println("Withdrawal request submitted successfully. Please wait for manager approval.");
+            System.out.println("Withdraw successfully.");
         } else {
             System.out.println("Failed to submit withdrawal request. It may already be processed or not eligible.");
         }
@@ -259,68 +275,92 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
     @Override
     public void editEnquiry(User user) {
         List<Enquiry> enquiries = enquiryController.getEnquiriesByApplicant(user.getName());
-    
+        
         if (enquiries.isEmpty()) {
             System.out.println("You have no enquiries to edit.");
             return;
         }
-    
+        
+        List<Enquiry> editableEnquiries = new ArrayList<>();
+        for (Enquiry enquiry : enquiries) {
+            if (enquiry.getAnswer() == null || enquiry.getAnswer().isEmpty()) {
+                editableEnquiries.add(enquiry);
+            }
+        }
+        
+        if (editableEnquiries.isEmpty()) {
+            System.out.println("You have no enquiries that can be edited. Answered enquiries cannot be modified.");
+            return;
+        }
+        
         System.out.println("\n=== Edit Enquiry ===");
-        for (int i = 0; i < enquiries.size(); i++) {
-            Enquiry enquiry = enquiries.get(i);
+        for (int i = 0; i < editableEnquiries.size(); i++) {
+            Enquiry enquiry = editableEnquiries.get(i);
             System.out.println((i + 1) + ". ID: " + enquiry.getId() + " | Project: " + enquiry.getProjectName() + " | Question: " + enquiry.getQuestion());
         }
         System.out.println("0. Cancel");
-    
+        
         System.out.print("Select an enquiry to edit (Enter number): ");
         int choice = getMenuChoice();
         if (choice == 0) {
             System.out.println("Edit canceled.");
             return;
         }
-        if (choice < 1 || choice > enquiries.size()) {
+        if (choice < 1 || choice > editableEnquiries.size()) {
             System.out.println("Invalid choice. Edit canceled.");
             return;
         }
-    
-        Enquiry selectedEnquiry = enquiries.get(choice - 1);
-    
+        
+        Enquiry selectedEnquiry = editableEnquiries.get(choice - 1);
+        
         System.out.print("Enter new question: ");
         String newQuestion = scanner.nextLine();
-    
+        
         boolean success = enquiryController.updateEnquiry(selectedEnquiry.getId(), newQuestion);
         System.out.println(success ? "Enquiry updated." : "Failed to update enquiry.");
     }
-    
+
     @Override
     public void deleteEnquiry(User user) {
         List<Enquiry> enquiries = enquiryController.getEnquiriesByApplicant(user.getName());
-    
+        
         if (enquiries.isEmpty()) {
             System.out.println("You have no enquiries to delete.");
             return;
         }
-    
+        
+        List<Enquiry> deletableEnquiries = new ArrayList<>();
+        for (Enquiry enquiry : enquiries) {
+            if (enquiry.getAnswer() == null || enquiry.getAnswer().isEmpty()) {
+                deletableEnquiries.add(enquiry);
+            }
+        }
+        
+        if (deletableEnquiries.isEmpty()) {
+            System.out.println("You have no enquiries that can be deleted. Answered enquiries cannot be removed.");
+            return;
+        }
+        
         System.out.println("\n=== Delete Enquiry ===");
-        for (int i = 0; i < enquiries.size(); i++) {
-            Enquiry enquiry = enquiries.get(i);
+        for (int i = 0; i < deletableEnquiries.size(); i++) {
+            Enquiry enquiry = deletableEnquiries.get(i);
             System.out.println((i + 1) + ". ID: " + enquiry.getId() + " | Project: " + enquiry.getProjectName() + " | Question: " + enquiry.getQuestion());
         }
         System.out.println("0. Cancel");
-    
+        
         System.out.print("Select an enquiry to delete (Enter number): ");
         int choice = getMenuChoice();
         if (choice == 0) {
             System.out.println("Deletion canceled.");
             return;
         }
-        if (choice < 1 || choice > enquiries.size()) {
+        if (choice < 1 || choice > deletableEnquiries.size()) {
             System.out.println("Invalid choice. Deletion canceled.");
             return;
         }
-    
-        Enquiry selectedEnquiry = enquiries.get(choice - 1);
-    
+        
+        Enquiry selectedEnquiry = deletableEnquiries.get(choice - 1);
+        
         boolean success = enquiryController.deleteEnquiry(selectedEnquiry.getId());
         System.out.println(success ? "Enquiry deleted." : "Failed to delete enquiry.");
     }
