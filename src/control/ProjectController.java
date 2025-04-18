@@ -69,9 +69,11 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
 
     @Override
     public List<Project> getAllProjects() {
-        return new ArrayList<>(projects.values());
+        List<Project> allProjects = new ArrayList<>(projects.values());
+        allProjects.sort(Comparator.comparing(Project::getName, String.CASE_INSENSITIVE_ORDER));
+        return allProjects;
     }
-
+    
     @Override
     public List<Project> getVisibleProjects() {
         List<Project> visibleProjects = new ArrayList<>();
@@ -80,6 +82,7 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
                 visibleProjects.add(project);
             }
         }
+        visibleProjects.sort(Comparator.comparing(Project::getName, String.CASE_INSENSITIVE_ORDER));
         return visibleProjects;
     }
 

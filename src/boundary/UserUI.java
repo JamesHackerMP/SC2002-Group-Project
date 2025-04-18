@@ -1,8 +1,13 @@
 package boundary;
 
 import boundary.interfaces.user.*;
+import control.ApplicationController;
 import control.AuthenticationController;
+import control.EnquiryController;
 import control.FilterController;
+import control.ProjectController;
+import entity.Application;
+import entity.Enquiry;
 import entity.Filter;
 import entity.Project;
 import entity.User;
@@ -13,14 +18,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterManagementUI, MainMenuUI {
+public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterManagementUI, MainMenuUI, NotificationUI {
     private final AuthenticationController authController;
     private final FilterController filterController;
+    private final ApplicationController applicationController;
+    private final ProjectController projectController;
+    private final EnquiryController enquiryController;
     private final Scanner scanner;
 
-    public UserUI(AuthenticationController authController, FilterController filterController) {
+    public UserUI(AuthenticationController authController, 
+                FilterController filterController,
+                ApplicationController applicationController,
+                ProjectController projectController,
+                EnquiryController enquiryController) {
         this.authController = authController;
         this.filterController = filterController;
+        this.applicationController = applicationController;
+        this.projectController = projectController;
+        this.enquiryController = enquiryController;
         this.scanner = new Scanner(System.in);
     }
 
@@ -47,8 +62,116 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
         filterController.setCurrentUser(user);
 
         System.out.println("\nLogin successful! Welcome, " + user.getName() + " (" + user.getRole() + ")");
+        
+        displayNotifications(user);
+        
         return user;
-    }
+        }
+        
+        @Override
+        public void displayNotifications(User user) {
+            switch (user.getRole()) {
+                case "Applicant" -> displayApplicantNotifications(user);
+                case "HDBOfficer" -> displayOfficerNotifications(user);
+                case "HDBManager" -> displayManagerNotifications(user);
+            }
+        }
+        
+        @Override
+        public void displayApplicantNotifications(User user) {
+
+            Application application = applicationController.getApplication(user.getName());
+            if (application != null) {
+                System.out.println("\nNOTIFICATION: Your application for project " + 
+                                application.getProjectName() + " is " + application.getStatus());
+            }
+            
+            List<Enquiry> answeredEnquiries = enquiryController.getEnquiriesByApplicant(user.getName()).stream()
+                    .filter(e -> e.getAnswer() != null && !e.getAnswer().isEmpty())
+                    .toList();
+            
+            if (!answeredEnquiries.isEmpty()) {
+                System.out.println("\nNOTIFICATION: You have " + answeredEnquiries.size() + 
+                                " answered enquiries. Check the Manage Enquiry menu to view responses.");
+            }
+            
+            if (application == null && answeredEnquiries.isEmpty()) {
+                System.out.println("\nNOTIFICATION: No current applications or enquiry responses.");
+            }
+        }
+        
+        @Override
+        public void displayOfficerNotifications(User user) {
+            Project currentProject = projectController.getCurrentProjectByOfficer(user.getName());
+            if (currentProject != null) {
+                long pendingBookings = applicationController.getAllApplications().stream()
+                        .filter(a -> a.getProjectName().equals(currentProject.getName()) && 
+                            a.getStatus() == Application.Status.SUCCESSFUL)
+                        .count();
+                
+                long unansweredEnquiries = enquiryController.getEnquiriesByProject(currentProject.getName()).stream()
+                        .filter(e -> e.getAnswer() == null)
+                        .count();
+                        
+                if (pendingBookings > 0) {
+                    System.out.println("\nNOTIFICATION: You have " + pendingBookings + 
+                                    " approved applications waiting for booking.");
+                }
+                
+                if (unansweredEnquiries > 0) {
+                    System.out.println("\nNOTIFICATION: You have " + unansweredEnquiries + 
+                                    " unanswered enquiries for project " + currentProject.getName() + ".");
+                }
+                
+                if (pendingBookings == 0 && unansweredEnquiries == 0) {
+                    System.out.println("\nNOTIFICATION: No pending applications or enquiries to process.");
+                }
+            }
+        }
+        
+        @Override
+        public void displayManagerNotifications(User user) {
+            List<Project> managerProjects = projectController.getProjectsByManager(user.getName());
+            if (!managerProjects.isEmpty()) {
+                int totalPendingOfficers = 0;
+                int totalPendingApplications = 0;
+                int totalUnansweredEnquiries = 0;
+                
+                for (Project project : managerProjects) {
+                    totalPendingOfficers += project.getPendingOfficers().size();
+                    
+                    long pendingApps = applicationController.getAllApplications().stream()
+                            .filter(a -> a.getProjectName().equals(project.getName()) && 
+                                a.getStatus() == Application.Status.PENDING)
+                            .count();
+                    totalPendingApplications += pendingApps;
+                    
+                    long unanswered = enquiryController.getEnquiriesByProject(project.getName()).stream()
+                            .filter(e -> e.getAnswer() == null)
+                            .count();
+                    totalUnansweredEnquiries += unanswered;
+                }
+                
+                if (totalPendingOfficers > 0) {
+                    System.out.println("\nNOTIFICATION: You have " + totalPendingOfficers + 
+                                    " pending officer registrations.");
+                }
+                
+                if (totalPendingApplications > 0) {
+                    System.out.println("\nNOTIFICATION: You have " + totalPendingApplications + 
+                                    " applications to process.");
+                }
+                
+                if (totalUnansweredEnquiries > 0) {
+                    System.out.println("\nNOTIFICATION: You have " + totalUnansweredEnquiries + 
+                                    " unanswered enquiries across your projects.");
+                }
+                
+                if (totalPendingOfficers == 0 && totalPendingApplications == 0 && totalUnansweredEnquiries == 0) {
+                    System.out.println("\nNOTIFICATION: No pending tasks to handle.");
+                }
+            }
+        }
 
     @Override
     public boolean changePassword(User user) {

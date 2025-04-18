@@ -56,7 +56,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                 case 6 -> handlePendingOfficers(manager);
                 case 7 -> processApplications(manager);
                 case 8 -> generateReports();
-                case 9 -> manageEnquiries();
+                case 9 -> manageEnquiries(manager);
                 case 0 -> {return;}
                 default -> System.out.println("Invalid choice. Please try again.");
             }
@@ -493,6 +493,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             System.out.println("Name: " + applicant.getName());
             System.out.println("Age: " + applicant.getAge());
             System.out.println("Marital Status: " + applicant.getMaritalStatus());
+            System.out.println("Flat Type Apply: " + selectedApp.getFlatTypeApply());
         } else {
             System.out.println("Failed to retrieve applicant details.");
             return;
@@ -658,31 +659,83 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     }
 
     @Override
-    public void manageEnquiries() {
+    public void manageEnquiries(HDBManager manager) {
+        String managerName = manager.getName();
+        List<Project> managerProjects = projectController.getProjectsByManager(managerName);
+        List<String> managedProjectNames = managerProjects.stream()
+                                            .map(Project::getName)
+                                            .toList();
+        
         System.out.println("\n=== All Enquiries ===");
         List<Enquiry> allEnquiries = enquiryController.getAllEnquiries();
-    
+        
         if (allEnquiries.isEmpty()) {
-            System.out.println("No enquiries found.");
+            System.out.println("No enquiries found in the system.");
             return;
         }
-    
+        
+        System.out.println("\n--- Other Projects' Enquiries (View Only) ---");
+        boolean hasOtherEnquiries = false;
+        
         for (int i = 0; i < allEnquiries.size(); i++) {
             Enquiry enquiry = allEnquiries.get(i);
-            System.out.println((i + 1) + ". ID: " + enquiry.getId());
-            System.out.println("   Project: " + enquiry.getProjectName());
+            
+            if (managedProjectNames.contains(enquiry.getProjectName())) {
+                continue;
+            }
+            
+            hasOtherEnquiries = true;
+            System.out.println((i + 1) + ". Project: " + enquiry.getProjectName() + " [View Only]");
+            System.out.println("   ID: " + enquiry.getId());
             System.out.println("   Applicant: " + enquiry.getApplicantName());
             System.out.println("   Question: " + enquiry.getQuestion());
             System.out.println("   Posted: " + enquiry.getCreatedDate());
             if (enquiry.getAnswer() != null) {
                 System.out.println("   Answer: " + enquiry.getAnswer());
                 System.out.println("   Answered: " + enquiry.getAnsweredDate());
+                System.out.println("   Status: Answered");
             } else {
                 System.out.println("   Status: Pending response");
             }
+            System.out.println();
         }
-        System.out.println("0. Cancel");
-    
+        
+        if (!hasOtherEnquiries) {
+            System.out.println("No enquiries from other projects.");
+        }
+        
+        System.out.println("\n--- Your Projects' Enquiries (Can Reply) ---");
+        boolean hasOwnEnquiries = false;
+        
+        for (int i = 0; i < allEnquiries.size(); i++) {
+            Enquiry enquiry = allEnquiries.get(i);
+            
+            if (!managedProjectNames.contains(enquiry.getProjectName())) {
+                continue;
+            }
+            
+            hasOwnEnquiries = true;
+            System.out.println((i + 1) + ". Project: " + enquiry.getProjectName() + " [Can Reply]");
+            System.out.println("   ID: " + enquiry.getId());
+            System.out.println("   Applicant: " + enquiry.getApplicantName());
+            System.out.println("   Question: " + enquiry.getQuestion());
+            System.out.println("   Posted: " + enquiry.getCreatedDate());
+            if (enquiry.getAnswer() != null) {
+                System.out.println("   Answer: " + enquiry.getAnswer());
+                System.out.println("   Answered: " + enquiry.getAnsweredDate());
+                System.out.println("   Status: Answered");
+            } else {
+                System.out.println("   Status: Pending response");
+            }
+            System.out.println();
+        }
+        
+        if (!hasOwnEnquiries) {
+            System.out.println("No enquiries for your projects.");
+        }
+        
+        System.out.println("0. Back");
+        
         int choice;
         while (true) {
             System.out.print("\nSelect an enquiry to reply (Enter number): ");
@@ -692,20 +745,37 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             
             if (choice < 1 || choice > allEnquiries.size()) {
                 System.out.println("Invalid selection. Please try again.");
-            } else {
-                break;
+                continue;
             }
-        }
-    
-        Enquiry selectedEnquiry = allEnquiries.get(choice - 1);
-        System.out.println("\nQuestion: " + selectedEnquiry.getQuestion());
-        System.out.print("Enter your reply: ");
-        String answer = scanner.nextLine();
-    
-        if (enquiryController.replyToEnquiry(selectedEnquiry.getId(), answer)) {
-            System.out.println("Reply submitted successfully.");
-        } else {
-            System.out.println("Failed to submit reply.");
+            
+            Enquiry selectedEnquiry = allEnquiries.get(choice - 1);
+            
+            if (!managedProjectNames.contains(selectedEnquiry.getProjectName())) {
+                System.out.println("You can only reply to enquiries for projects you manage.");
+                continue;
+            }
+            
+            if (selectedEnquiry.getAnswer() != null) {
+                System.out.println("This enquiry has already been answered.");
+                System.out.println("Current answer: " + selectedEnquiry.getAnswer());
+                System.out.print("Do you want to update the answer? (Y/N): ");
+                String updateDecision = scanner.nextLine().trim().toUpperCase();
+                if (!updateDecision.equals("Y")) {
+                    continue;
+                }
+            }
+            
+            System.out.println("\nQuestion: " + selectedEnquiry.getQuestion());
+            System.out.print("Enter your reply: ");
+            String answer = scanner.nextLine();
+            
+            if (enquiryController.replyToEnquiry(selectedEnquiry.getId(), answer)) {
+                System.out.println("Reply submitted successfully.");
+            } else {
+                System.out.println("Failed to submit reply.");
+            }
+            
+            break;
         }
     }
 

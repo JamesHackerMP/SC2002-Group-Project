@@ -31,7 +31,7 @@ public class Main {
         this.officerController = new OfficerController(projectController, applicationController);
         this.managerController = new ManagerController(projectController, applicationController, officerController, authController);
 
-        this.userUI = new UserUI(authController, filterController);
+        this.userUI = new UserUI(authController, filterController, applicationController, projectController, enquiryController);
         this.applicantUI = new ApplicantUI(projectController, applicationController, enquiryController, filterController);
         this.officerUI = new HDBOfficerUI(projectController, applicationController, enquiryController, officerController,
                 authController, filterController);

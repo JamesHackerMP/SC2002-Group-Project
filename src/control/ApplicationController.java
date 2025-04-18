@@ -65,10 +65,6 @@ public class ApplicationController implements ApplicationEligibilityController,
         if (!isEligibleForProject(applicant, projectController.getProject(projectName))) {
             return false;
         }
-        
-        applications.values().removeIf(app -> 
-        app.getApplicantName().equals(applicant.getName()) && 
-        app.getStatus() == Application.Status.UNSUCCESSFUL);
 
         Application application = new Application(applicant.getName(), projectName, flatTypeApply);
         applications.put(applicant.getName(), application);

@@ -1,5 +1,7 @@
 package boundary.interfaces.manager;
 
+import entity.HDBManager;
+
 public interface EnquiryManagerUI {
-    void manageEnquiries();
+    void manageEnquiries(HDBManager manager);
 }

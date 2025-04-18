@@ -64,12 +64,6 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
             return;
         }
 
-        projects.removeIf(project -> applicationController.getAllApplications().stream()
-        .anyMatch(application -> 
-            application.getApplicantName().equals(officer.getName()) &&
-            application.getProjectName().equals(project.getName())
-        ));
-
         for (int i = 0; i < projects.size(); i++) {
             Project project = projects.get(i);
             System.out.printf("%d. %s (Neighborhood: %s, Slots: %d/%d, Application Period: %s to %s)%n",
@@ -91,6 +85,11 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
 
         Project selectedProject = projects.get(choice - 1);
         if (officerController.registerForProject(officer, selectedProject.getName())) {
+
+            applicationController.getAllApplications().removeIf(app -> 
+            app.getApplicantName().equals(officer.getName()) && 
+            app.getStatus() == Application.Status.UNSUCCESSFUL);
+
             System.out.println("Registration submitted for approval.");
         } else {
             System.out.println("Registration failed. You may be ineligible.");
