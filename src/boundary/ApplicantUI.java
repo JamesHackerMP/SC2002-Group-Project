@@ -56,9 +56,30 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
         List<Project> projects = filterController.applyFilters(projectController.getVisibleProjects());
     
         projects.removeIf(project -> !applicationController.isEligibleForProject(user, project));
+
+        Filter filter = filterController.getFilter();
+        System.out.println("Current Filters:");
+        if (filter.getNeighborhood() != null) {
+            System.out.println("Neighborhood: " + filter.getNeighborhood());
+        }
+        if (filter.getFlatTypes() != null && !filter.getFlatTypes().isEmpty()) {
+            System.out.println("Flat Types: " + filter.getFlatTypes());
+        }
+        if (filter.getOpeningAfter() != null) {
+            System.out.println("Opening After: " + filter.getOpeningAfter());
+        }
+        if (filter.getClosingBefore() != null) {
+            System.out.println("Closing Before: " + filter.getClosingBefore());
+        }
+        if (filter.getManager() != null) {
+            System.out.println("Manager: " + filter.getManager());
+        }
+        if (filter.getOfficer() != null) {
+            System.out.println("Officer: " + filter.getOfficer());
+        }
     
         if (projects.isEmpty()) {
-            System.out.println("No projects available for application.");
+            System.out.println("No projects available with the current filters.");
             return;
         }
     
@@ -97,7 +118,7 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
         }
         System.out.println("0. Cancel");
     
-        System.out.print("Select a project to apply (Enter number): ");
+        System.out.print("Select a project to apply (Enter number) ");
         int choice = getMenuChoice();
         if (choice == 0) {
             System.out.println("Application canceled.");
@@ -125,7 +146,7 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
             }
             System.out.println("0. Cancel");
         
-            System.out.println("Select a flat type to apply (Enter number): ");
+            System.out.println("Select a flat type to apply (Enter number) ");
             choice = getMenuChoice();
             
             switch (choice) {
@@ -189,10 +210,30 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
 
     @Override
     public void withdrawApplication(User user) {
+        Application application = applicationController.getApplication(user.getName());
+        
+        if (application == null) {
+            System.out.println("You have no active application to withdraw.");
+            return;
+        }
+        
+        System.out.println("\n=== Withdraw Application ===");
+        System.out.println("You are about to withdraw your application for project: " + application.getProjectName());
+        System.out.println("This action cannot be undone. Are you sure?");
+        System.out.println("1. Yes, withdraw my application");
+        System.out.println("0. No, cancel");
+        
+        int choice = getMenuChoice();
+        
+        if (choice != 1) {
+            System.out.println("Withdrawal canceled.");
+            return;
+        }
+        
         if (applicationController.requestWithdrawal(user.getName())) {
-            System.out.println("Withdraw successfully.");
+            System.out.println("Application withdrawn successfully.");
         } else {
-            System.out.println("Failed to submit withdrawal request. It may already be processed or not eligible.");
+            System.out.println("Failed to withdraw application. It may already be processed or not eligible.");
         }
     }
 
@@ -233,7 +274,7 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
             System.out.println((i + 1) + ". " + project.getName() + " (" + project.getNeighborhood() + ")");
         }
 
-        System.out.print("Select a project for enquiry (Enter number): ");
+        System.out.print("Select a project for enquiry (Enter number) ");
         int choice = getMenuChoice();
         if (choice < 1 || choice > projects.size()) {
             System.out.println("Invalid choice. Enquiry creation canceled.");
@@ -300,7 +341,7 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
         }
         System.out.println("0. Cancel");
         
-        System.out.print("Select an enquiry to edit (Enter number): ");
+        System.out.print("Select an enquiry to edit (Enter number) ");
         int choice = getMenuChoice();
         if (choice == 0) {
             System.out.println("Edit canceled.");
@@ -348,7 +389,7 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
         }
         System.out.println("0. Cancel");
         
-        System.out.print("Select an enquiry to delete (Enter number): ");
+        System.out.print("Select an enquiry to delete (Enter number) ");
         int choice = getMenuChoice();
         if (choice == 0) {
             System.out.println("Deletion canceled.");

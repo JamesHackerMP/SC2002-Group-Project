@@ -73,7 +73,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
         }
         System.out.println("0. Cancel");
 
-        System.out.print("\nSelect a project to register (Enter number): ");
+        System.out.print("\nSelect a project to register (Enter number) ");
         int choice = getMenuChoice();
 
         if (choice == 0) return;
@@ -110,14 +110,35 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
         }
     
         if (assignedProjects != null && !assignedProjects.isEmpty()) {
-            System.out.println("\nWould you like to apply filters to your projects? (yes/no): ");
-            String applyFilters = scanner.nextLine().trim().toLowerCase();
-
-            if (applyFilters.equals("yes")) {
-                assignedProjects = filterController.applyFilters(assignedProjects);
-            }
-
             System.out.println("\n=== Assigned Projects ===");
+            Filter filter = filterController.getFilter();
+            System.out.println("Current Filters:");
+            if (filter.getNeighborhood() != null) {
+                System.out.println("Neighborhood: " + filter.getNeighborhood());
+            }
+            if (filter.getFlatTypes() != null && !filter.getFlatTypes().isEmpty()) {
+                System.out.println("Flat Types: " + filter.getFlatTypes());
+            }
+            if (filter.getOpeningAfter() != null) {
+                System.out.println("Opening After: " + filter.getOpeningAfter());
+            }
+            if (filter.getClosingBefore() != null) {
+                System.out.println("Closing Before: " + filter.getClosingBefore());
+            }
+            if (filter.getManager() != null) {
+                System.out.println("Manager: " + filter.getManager());
+            }
+            if (filter.getOfficer() != null) {
+                System.out.println("Officer: " + filter.getOfficer());
+            }
+        
+            List<Project> allProjects = filterController.applyFilters(assignedProjects);
+        
+            if (allProjects.isEmpty()) {
+                System.out.println("No projects available with the current filters.");
+                return;
+            }
+            
             for (Project project : assignedProjects) {
                 System.out.println("\nProject Name: " + project.getName());
                 System.out.println("Neighborhood: " + project.getNeighborhood());
@@ -174,7 +195,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
         }
         System.out.println("0. Cancel");
 
-        System.out.print("\nSelect an application to process (Enter number): ");
+        System.out.print("\nSelect an application to process (Enter number) ");
         int choice = getMenuChoice();
 
         if (choice == 0) return;
@@ -193,7 +214,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
             System.out.println("1. 2-Room");
             System.out.println("0. Cancel");
             
-            System.out.print("Select flat type to book (Enter number): ");
+            System.out.print("Select flat type to book (Enter number) ");
             int flatChoice = getMenuChoice();
             
             switch (flatChoice) {
@@ -221,7 +242,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
             }
             System.out.println("0. Cancel");
             
-            System.out.print("Select flat type to book (Enter number): ");
+            System.out.print("Select flat type to book (Enter number) ");
             int flatChoice = getMenuChoice();
             
             switch (flatChoice) {
@@ -295,7 +316,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
         }
         System.out.println("0. Cancel");
     
-        System.out.print("\nSelect a booking to generate receipt (Enter number): ");
+        System.out.print("\nSelect a booking to generate receipt (Enter number) ");
         int choice = getMenuChoice();
 
         if (choice == 0) return;
@@ -355,7 +376,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
 
         int choice;
         while (true) {
-            System.out.print("\nSelect an enquiry to reply (Enter number): ");
+            System.out.print("\nSelect an enquiry to reply (Enter number) ");
             choice = getMenuChoice();
             
             if (choice == 0) return;

@@ -4,8 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface FilterCriteria {
-    String getLocation();
-    void setLocation(String location);
+    String getNeighborhood();
+    void setNeighborhood(String neighborhood);
     List<String> getFlatTypes();
     void setFlatTypes(List<String> flatTypes);
     LocalDate getOpeningAfter();

@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class Filter implements FilterCriteria {
-    private String location;
+    private String neighborhood;
     private List<String> flatTypes;
     private LocalDate openingAfter;
     private LocalDate closingBefore;
@@ -13,13 +13,13 @@ public class Filter implements FilterCriteria {
     private String officer;
 
     @Override
-    public String getLocation() {
-        return location;
+    public String getNeighborhood() {
+        return neighborhood;
     }
 
     @Override
-    public void setLocation(String location) {
-        this.location = location;
+    public void setNeighborhood(String neighborhood) {
+        this.neighborhood = neighborhood;
     }
 
     @Override

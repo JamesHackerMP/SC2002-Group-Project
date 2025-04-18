@@ -79,23 +79,13 @@ public class ApplicationController implements ApplicationEligibilityController,
     @Override
     public boolean requestWithdrawal(String applicantName) {
         Application application = applications.get(applicantName);
-        if (application == null || application.getStatus() != Application.Status.PENDING) {
+        if (application == null || application.getStatus() != Application.Status.PENDING || application.getStatus() != Application.Status.SUCCESSFUL) {
             return false;
         }
-        application.setWithdrawalRequested(true);
+        application.setStatus(Application.Status.UNSUCCESSFUL);
         return true;
     }
     
-    @Override
-    public boolean approveWithdrawal(String applicantName) {
-        Application application = applications.get(applicantName);
-        if (application == null || !application.isWithdrawalRequested()) {
-            return false;
-        }
-        applications.remove(applicantName);
-        return true;
-    }
-
     @Override
     public boolean approveApplication(String applicantName) {
         Application application = applications.get(applicantName);

@@ -30,8 +30,8 @@ public class FilterController implements FilterManagementController {
         Filter filter = currentUser.getFilter();
         return projects.stream()
                 .filter(p -> {
-                    String location = filter.getLocation();
-                    return location == null || p.getNeighborhood().equalsIgnoreCase(location);
+                    String neighborhood = filter.getNeighborhood();
+                    return neighborhood == null || p.getNeighborhood().equalsIgnoreCase(neighborhood);
                 })
                 .filter(p -> {
                     List<String> flatTypes = filter.getFlatTypes();

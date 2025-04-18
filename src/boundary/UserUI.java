@@ -235,7 +235,7 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
         while (true) {
             System.out.println("\n=== Set Project Filters ===");
             System.out.println("Current filters:");
-            System.out.println("Location: " + (filter.getLocation() != null ? filter.getLocation() : "Not set"));
+            System.out.println("Neighborhood: " + (filter.getNeighborhood() != null ? filter.getNeighborhood() : "Not set"));
             System.out.println("Flat Types: " + (filter.getFlatTypes() != null ? filter.getFlatTypes() : "Not set"));
             System.out.println("Opening After: " + (filter.getOpeningAfter() != null ? filter.getOpeningAfter() : "Not set"));
             System.out.println("Closing Before: " + (filter.getClosingBefore() != null ? filter.getClosingBefore() : "Not set"));
@@ -243,7 +243,7 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
             System.out.println("Officer: " + (filter.getOfficer() != null ? filter.getOfficer() : "Not set"));
     
             System.out.println("\n0. Back");
-            System.out.println("1. Set Location");
+            System.out.println("1. Set Neighborhood");
             System.out.println("2. Set Flat Types");
             System.out.println("3. Set Opening After");
             System.out.println("4. Set Closing Before");
@@ -257,8 +257,8 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
                     return;
                 }
                 case 1 -> {
-                    String location = getStringInput("Enter location: ");
-                    filter.setLocation(location);
+                    String neighborhood = getStringInput("Enter neighborhood: ");
+                    filter.setNeighborhood(neighborhood);
                 }
                 case 2 -> {
                     String flatTypesStr = getStringInput("Enter flat types (comma-separated, e.g., 2-Room,3-Room): ");
@@ -292,7 +292,7 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
                     filter.setOfficer(officer);
                 }
                 case 7 -> {
-                    filter.setLocation(null);
+                    filter.setNeighborhood(null);
                     filter.setFlatTypes(null);
                     filter.setOpeningAfter(null);
                     filter.setClosingBefore(null);

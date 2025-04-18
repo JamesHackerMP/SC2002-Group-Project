@@ -5,6 +5,4 @@ import entity.Application;
 public interface ApplicationStatus {
     Application.Status getStatus();
     void setStatus(Application.Status status);
-    boolean isWithdrawalRequested();
-    void setWithdrawalRequested(boolean withdrawalRequested);
 }

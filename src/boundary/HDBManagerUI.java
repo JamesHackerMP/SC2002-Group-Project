@@ -83,15 +83,18 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         System.out.print("Neighborhood: ");
         String neighborhood = scanner.nextLine();
 
-        System.out.print("Number of 2-Room Units: ");
+        System.out.print("Number of 2-Room Units (0 if none): ");
         int twoRoomUnits = Integer.parseInt(scanner.nextLine());
-
-        System.out.print("Price per 2-Room Unit: ");
-        int twoRoomPrice = Integer.parseInt(scanner.nextLine());
-
+        
+        int twoRoomPrice = 0;
+        if (twoRoomUnits > 0) {
+            System.out.print("Price per 2-Room Unit: ");
+            twoRoomPrice = Integer.parseInt(scanner.nextLine());
+        }
+        
         System.out.print("Number of 3-Room Units (0 if none): ");
         int threeRoomUnits = Integer.parseInt(scanner.nextLine());
-
+        
         int threeRoomPrice = 0;
         if (threeRoomUnits > 0) {
             System.out.print("Price per 3-Room Unit: ");
@@ -139,7 +142,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     
         int projectChoice = -1;
         while (projectChoice < 0 || projectChoice > managerProjects.size()) {
-            System.out.print("\nSelect a project to edit (Enter number): ");
+            System.out.print("\nSelect a project to edit (Enter number) ");
             try {
                 projectChoice = Integer.parseInt(scanner.nextLine());
                 if (projectChoice == 0) {
@@ -240,7 +243,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     
         int choice;
         while (true) {
-            System.out.print("\nSelect a project to toggle visibility (Enter number): ");
+            System.out.print("\nSelect a project to toggle visibility (Enter number) ");
 
             choice = getMenuChoice();
             
@@ -274,8 +277,8 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     
         Filter filter = filterController.getFilter();
         System.out.println("Current Filters:");
-        if (filter.getLocation() != null) {
-            System.out.println("Location: " + filter.getLocation());
+        if (filter.getNeighborhood() != null) {
+            System.out.println("Neighborhood: " + filter.getNeighborhood());
         }
         if (filter.getFlatTypes() != null && !filter.getFlatTypes().isEmpty()) {
             System.out.println("Flat Types: " + filter.getFlatTypes());
@@ -339,7 +342,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     
         int projectChoice;
         while (true) {
-            System.out.print("\nSelect a project to process (Enter number): ");
+            System.out.print("\nSelect a project to process (Enter number) ");
             projectChoice = getMenuChoice();
             
             if (projectChoice == 0) return;
@@ -361,7 +364,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     
         int officerChoice;
         while (true) {
-            System.out.print("\nSelect an officer to process (Enter number): ");
+            System.out.print("\nSelect an officer to process (Enter number) ");
             officerChoice = getMenuChoice();
             
             if (officerChoice == 0) return;
@@ -386,17 +389,25 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             return;
         }
     
-        System.out.print("Approve (A) or Reject (R)? ");
-        String decision = scanner.nextLine().trim().toUpperCase();
-    
+        System.out.println("\n1. Approve officer");
+        System.out.println("2. Reject officer");
+        System.out.println("0. Cancel");
+        System.out.print("Enter your choice: ");
+        int decision = getMenuChoice();
+        
         boolean success = false;
-        if (decision.equals("A")) {
-            success = managerController.approveOfficer(selectedOfficer, selectedProject.getName());
-        } else if (decision.equals("R")) {
-            success = managerController.rejectOfficer(selectedOfficer, selectedProject.getName());
+        switch (decision) {
+            case 1 -> {
+                success = managerController.approveOfficer(selectedOfficer, selectedProject.getName());
+                System.out.println(success ? "Officer approved successfully." : "Failed to approve officer.");
+            }
+            case 2 -> {
+                success = managerController.rejectOfficer(selectedOfficer, selectedProject.getName());
+                System.out.println(success ? "Officer rejected successfully." : "Failed to reject officer.");
+            }
+            case 0 -> System.out.println("Action canceled.");
+            default -> System.out.println("Invalid choice. No action taken.");
         }
-    
-        System.out.println(success ? "Action completed successfully." : "Action failed. Check inputs.");
     }
 
     @Override
@@ -428,7 +439,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             return;
         }
     
-        System.out.println("\nSelect a project to process (Enter number):");
+        System.out.println("\nSelect a project to process (Enter number)");
         for (int i = 0; i < projectsWithPendingActions.size(); i++) {
             System.out.println((i + 1) + ". " + projectsWithPendingActions.get(i).getName());
         }
@@ -499,25 +510,29 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             return;
         }
     
-        System.out.print("Approve (A) or Reject (R)? ");
-        String decision = scanner.nextLine().trim().toUpperCase();
-    
+        System.out.println("\n1. Approve application");
+        System.out.println("2. Reject application");
+        System.out.println("0. Cancel");
+        System.out.print("Enter your choice: ");
+        int decision = getMenuChoice();
+        
         switch (decision) {
-            case "A" -> {
+            case 1 -> {
                 if (applicationController.approveApplication(selectedApp.getApplicantName())) {
                     System.out.println("Application approved.");
                 } else {
                     System.out.println("Failed to approve application.");
                 }
             }
-            case "R" -> {
+            case 2 -> {
                 if (applicationController.rejectApplication(selectedApp.getApplicantName())) {
                     System.out.println("Application rejected.");
                 } else {
                     System.out.println("Failed to reject application.");
                 }
             }
-            default -> System.out.println("Invalid decision. No action taken.");
+            case 0 -> System.out.println("Action canceled.");
+            default -> System.out.println("Invalid choice. No action taken.");
         }
     }
 
@@ -550,7 +565,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                 filters.put("status", "BOOKED");
             }
             case 4 -> {
-                System.out.println("\nSelect Marital Status (Enter number):");
+                System.out.println("\nSelect Marital Status (Enter number)");
                 System.out.println("1. Married");
                 System.out.println("2. Single");
                 System.out.println("0. Cancel");
@@ -571,7 +586,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                 filters.put("maritalStatus", maritalStatus);
             }
             case 5 -> {
-                System.out.println("\nSelect Flat Type (Enter number):");
+                System.out.println("\nSelect Flat Type (Enter number)");
                 System.out.println("1. 2-Room");
                 System.out.println("2. 3-Room");
                 System.out.println("0. Cancel");
@@ -598,7 +613,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                     return;
                 }
     
-                System.out.println("\nSelect a Project (Enter number):");
+                System.out.println("\nSelect a Project (Enter number)");
                 for (int i = 0; i < allProjects.size(); i++) {
                     System.out.println((i + 1) + ". " + allProjects.get(i).getName());
                 }
@@ -738,7 +753,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         
         int choice;
         while (true) {
-            System.out.print("\nSelect an enquiry to reply (Enter number): ");
+            System.out.print("\nSelect an enquiry to reply (Enter number) ");
             choice = getMenuChoice();
             
             if (choice == 0) return;

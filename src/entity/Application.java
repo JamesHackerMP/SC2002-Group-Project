@@ -11,7 +11,6 @@ public class Application implements ApplicationDetails, ApplicationStatus, FlatA
     private Status status;
     private String flatType;
     private int price;
-    private boolean withdrawalRequested;
 
     public Application(String applicantName, String projectName, String flatTypeApply) {
         this.applicantName = applicantName;
@@ -56,9 +55,4 @@ public class Application implements ApplicationDetails, ApplicationStatus, FlatA
     @Override
     public void setPrice(int price) { this.price = price; }
 
-    @Override
-    public boolean isWithdrawalRequested() { return withdrawalRequested; }
-    
-    @Override
-    public void setWithdrawalRequested(boolean withdrawalRequested) { this.withdrawalRequested = withdrawalRequested; }
 }

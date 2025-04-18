@@ -94,8 +94,8 @@ public class CSVFileHandler implements FileDataHandler {
             record[0] = project.getName();
             record[1] = project.getNeighborhood();
             record[2] = "2-Room";
-            record[3] = String.valueOf(project.getTwoRoomUnits());
-            record[4] = String.valueOf(project.getTwoRoomPrice());
+            record[3] = project.getThreeRoomUnits() > 0 ? String.valueOf(project.getTwoRoomUnits()) : "";
+            record[4] = project.getThreeRoomUnits() > 0 ? String.valueOf(project.getTwoRoomPrice()) : "";
             record[5] = project.getThreeRoomUnits() > 0 ? "3-Room" : "";
             record[6] = project.getThreeRoomUnits() > 0 ? String.valueOf(project.getThreeRoomUnits()) : "";
             record[7] = project.getThreeRoomUnits() > 0 ? String.valueOf(project.getThreeRoomPrice()) : "";
@@ -166,8 +166,8 @@ public class CSVFileHandler implements FileDataHandler {
         for (String[] record : projectData) {
             String name = record[0];
             String neighborhood = record[1];
-            int twoRoomUnits = Integer.parseInt(record[3]);
-            int twoRoomPrice = Integer.parseInt(record[4]);
+            int twoRoomUnits = record[3].isEmpty() ? 0 : Integer.parseInt(record[3]);
+            int twoRoomPrice = record[4].isEmpty() ? 0 : Integer.parseInt(record[4]);
             int threeRoomUnits = record[6].isEmpty() ? 0 : Integer.parseInt(record[6]);
             int threeRoomPrice = record[7].isEmpty() ? 0 : Integer.parseInt(record[7]);
             LocalDate openDate = LocalDate.parse(record[8], DATE_FORMATTER);
