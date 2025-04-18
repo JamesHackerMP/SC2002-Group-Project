@@ -35,28 +35,44 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     public void displayMenu(HDBManager manager) {
         while (true) {
             System.out.println("\n=== HDB Manager Menu ===");
+            System.out.println("1. View All Projects");
+            System.out.println("2. Manage Projects");
+            System.out.println("3. Manage Officer Registrations");
+            System.out.println("4. Process Applications");
+            System.out.println("5. Manage Enquiries");
+            System.out.println("6. Generate Reports");
+            System.out.println("0. Back to Main Menu");
+    
+            int choice = getMenuChoice();
+            switch (choice) {
+                case 1 -> viewAllProjects();
+                case 2 -> manageProjects(manager);
+                case 3 -> handlePendingOfficers(manager);
+                case 4 -> processApplications(manager);
+                case 5 -> manageEnquiries(manager);
+                case 6 -> generateReports();
+                case 0 -> {return;}
+                default -> System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+    
+    @Override
+    public void manageProjects(HDBManager manager) {
+        while (true) {
+            System.out.println("\n=== Manage Projects ===");
             System.out.println("1. Create New Project");
             System.out.println("2. Edit Project");
             System.out.println("3. Delete Project");
             System.out.println("4. Toggle Project Visibility");
-            System.out.println("5. View All Projects");
-            System.out.println("6. Manage Officer Registrations");
-            System.out.println("7. Process Applications");
-            System.out.println("8. Generate Reports");
-            System.out.println("9. Manage Enquiries");
             System.out.println("0. Back to Main Menu");
-
+    
             int choice = getMenuChoice();
             switch (choice) {
                 case 1 -> createProject(manager);
                 case 2 -> editProject(manager);
                 case 3 -> deleteProject(manager);
                 case 4 -> toggleVisibility(manager);
-                case 5 -> viewAllProjects();
-                case 6 -> handlePendingOfficers(manager);
-                case 7 -> processApplications(manager);
-                case 8 -> generateReports();
-                case 9 -> manageEnquiries(manager);
                 case 0 -> {return;}
                 default -> System.out.println("Invalid choice. Please try again.");
             }

@@ -74,16 +74,16 @@
 8.	Oswald logs out__0__0
 ## Scene8: Martha processes Oswald’s registration
 1.	Martha logins__S1231231A__password
-2.	Martha check Oswald’s enquiry (but cannot reply)__4__9
-3.	Martha approves Oswald’s registration__6__1__1__1
+2.	Martha check Oswald’s enquiry (but cannot reply)__4__5
+3.	Martha approves Oswald’s registration__3__1__1__1
 4.	I check the project CSV (to see Oswald)
-5.	Martha attempts to create a new project (cannot even get in)__1
+5.	Martha attempts to create a new project (cannot even get in)__2__1
 6.	Martha toggles Project Pineapple House to Hidden__4__1
 7.	Martha attempts to creates a new project with the same name (cannot)__1__”Pineapple House”
 8.	Martha creates a new active Project__1__ “Sleeping Beauty Castle”__”Disneyland”__1__100000__0__2025/04/01__2025/05/01__3
 9.	I check the project CSV (to see new project)
 10.	Martha attempts to toggle Project Pineapple House to visible (cannot)__4__1
-11.	Martha logs out__0__0.
+11.	Martha logs out__0__0__0.
 ## Scene9: Austin contacts Oswald to book flat
 1.	Austin logins__S1231231N__MarriedMe
 2.	Austin checks his filter setting__3
@@ -92,9 +92,9 @@
 5.	Austin logs out__0__0
 ## Scene10: Matthew toggles visibility
 1.	Matthew logins__S1231231W__password
-2.	Matthew views all projects__4__5
+2.	Matthew views all projects__4__1
 3.	Matthew alters the filter to his name__0__3__5__”Matthew”
-4.	Matthew views all projects__0__4__5
+4.	Matthew views all projects__0__4__1
 5.	Matthew toggles Project Krusty Krab to Hidden__4__1
 6.	Matthew logs out__0__0
 ## Scene11: Oswald books flat for Austin
@@ -113,6 +113,6 @@
 3.	Austin logs out__0__0
 ## Scene13: Martha generates a report
 1.	Martha logins__S1231231A__password
-2.	Martha generates a report by married__4__8__4__1
-3.	Martha generates a report by age__8__7__30__40
+2.	Martha generates a report by married__4__6__4__1
+3.	Martha generates a report by age__6__7__30__40
 4.	Martha logs out__0__0

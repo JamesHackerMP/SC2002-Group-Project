@@ -3,6 +3,7 @@ package boundary.interfaces.manager;
 import entity.HDBManager;
 
 public interface ProjectManagementManagerUI {
+    void manageProjects(HDBManager manager);
     void createProject(HDBManager manager);
     void editProject(HDBManager manager);
     void deleteProject(HDBManager manager);
