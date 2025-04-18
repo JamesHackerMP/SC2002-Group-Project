@@ -34,11 +34,11 @@
 5.	Austin views available projects__5__1
 6.	Austin alters filter to Neighborhood of Bikini Bottom__0__3__Bikini Bottom
 7.	Austin view available projects (now Mickey Mouse Clubhouse disappear)__0__4__1
-8.	Austin applies the Project Krusty Krab 3-Room__2__1__1
+8.	Austin applies the Project Krusty Krab 3-Room__2__1__1__1
 9.	Austin views his application__3
 10.	Austin withdraws his application for Project Krusty Krab__4__1
 11.	Austin views his application__3
-12.	Austin applies the Project Pineapple House 2-Room__2__2__1
+12.	Austin applies the Project Pineapple House 2-Room__2__2__1__1
 13.	Austin views his application__3
 14.	Austin enquiries about the Project Pineapple House__5__1__2__”Too expensive!”
 15.	Austin checks his enquiry__2
@@ -48,34 +48,34 @@
 ## Scene5: Oswald applies the same project to Austin
 1.	Oswald logins__S1231231D__ MarriedMe 
 2.	Oswald views available projects__5__1
-3.	Oswald applies the Project Pineapple House 3-Room__2__1__1
+3.	Oswald applies the Project Pineapple House 3-Room__2__1__1__1
 4.	Oswald attempts to register the Project Pineapple House but cannot see__0__4__1
 5.	Oswald enquiries about the project he applies__0__5__1__3__”?”
 6.	Oswald checks his enquiry__2
-7.	Oswald edits his enquiry__3__1__ “I only want 3-Room, otherwise please reject”
+7.	Oswald edits his enquiry__3__1__“I only want 3-Room, otherwise please reject”
 8.	Oswald checks his enquiry__2
 9.	Oswald logs out__0__0
 ## Scene6: Martha processes Austin’s and Oswald’s applications
 1.	Martha logins__S1231231A__password
 2.	Martha updated Project Pineapple House’s available 3-Room to 0__4__2__1__Enter__Enter__0
 3.	I check project csv
-4.	Martha replies to Oswald’s enquiry__9__1__”As you wish”
-5.	Martha rejects Oswald’s application__
-6.	Martha approves Austin’s application
+4.	Martha replies to Oswald’s enquiry__5__1__”As you wish”
+5.	Martha rejects Oswald’s application__4__?__2__1
+6.	Martha approves Austin’s application__4__?__1__1
 7.	Martha logs out__0__0
 ## Scene7: Oswald registers Project Pineapple House
 1.	Oswald logins__S1231231D__password
 2.	Oswald checks the enquiry__5__5__2
 3.	Oswald views his application__0__3
 4.	Oswald enquires about Project Krusty Krab__5__1__1
-5.	Oswald register the Project Pineapple House__0__0__4__1__3
+5.	Oswald register the Project Pineapple House__0__0__4__1__3__1
 6.	Oswald views his registration status__2
 7.	Oswald attempts to apply the Project Pineapple House but cannot see__0__5__2__0
 8.	Oswald logs out__0__0
 ## Scene8: Martha processes Oswald’s registration
 1.	Martha logins__S1231231A__password
 2.	Martha check Oswald’s enquiry (but cannot reply)__4__5
-3.	Martha approves Oswald’s registration__3__1__1__1
+3.	Martha approves Oswald’s registration__3__1__1__1__1
 4.	I check the project CSV (to see Oswald)
 5.	Martha attempts to create a new project (cannot even get in)__2__1
 6.	Martha toggles Project Pineapple House to Hidden__4__1
@@ -101,7 +101,7 @@
 1.	Oswald logins__S1231231D__password
 2.	Oswald views his project (even though Martha has turned it to Hidden)__4__2
 3.	Oswald replies to Austin__5__1__”Sure things”
-4.	Oswald books the 2-Room flat for Austin__3__1__1
+4.	Oswald books the 2-Room flat for Austin__3__1__1__1
 5.	Oswald views his project__2
 6.	Oswald generates the receipt for Austin__4__1
 7.	Oswald view available projects (cannot see Project Pineapple House)__0__5__1

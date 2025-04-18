@@ -272,6 +272,17 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
                     return;
             }
         }
+        System.out.println("\nAre you sure you want to book a " + flatType + " flat for " 
+        + selectedApplication.getApplicantName() + "?");
+        System.out.println("This action finalizes the booking.");
+        System.out.println("1. Yes, confirm booking");
+        System.out.println("0. No, cancel");
+
+        int confirmChoice = getMenuChoice();
+        if (confirmChoice != 1) {
+            System.out.println("Booking cancelled.");
+            return;
+        }
 
         if (applicationController.bookFlat(selectedApplication.getApplicantName(), flatType, officer.getName())) {
             System.out.println("Flat booked successfully!");

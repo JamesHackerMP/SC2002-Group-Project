@@ -179,6 +179,19 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
             flatTypeApply = "2-room";
         }
 
+        System.out.println("\nYou are about to apply for:");
+        System.out.println("Project: " + selectedProject.getName());
+        System.out.println("Flat Type: " + flatTypeApply);
+        System.out.println("\nConfirm application?");
+        System.out.println("1. Yes, submit application");
+        System.out.println("0. No, cancel");
+        
+        int confirmChoice = getMenuChoice();
+        if (confirmChoice != 1) {
+            System.out.println("Application cancelled.");
+            return;
+        }
+    
         if (applicationController.applyForProject(user, selectedProject.getName(), flatTypeApply)) {
             System.out.println("Application submitted successfully!");
         } else {
@@ -288,29 +301,40 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
 
         Enquiry enquiry = enquiryController.createEnquiry(user.getName(), selectedProject.getName(), question);
         System.out.println("Enquiry created with ID: " + enquiry.getId());
+        System.out.println("Posted on: " + enquiry.getFormattedCreatedDate());
     }
 
     @Override
     public void viewMyEnquiries(User user) {
         List<Enquiry> enquiries = enquiryController.getEnquiriesByApplicant(user.getName());
-
+    
         if (enquiries.isEmpty()) {
             System.out.println("You have no enquiries.");
             return;
         }
-
+    
         System.out.println("\n=== Your Enquiries ===");
-        for (Enquiry enquiry : enquiries) {
-            System.out.println("\nID: " + enquiry.getId());
-            System.out.println("Project: " + enquiry.getProjectName());
-            System.out.println("Question: " + enquiry.getQuestion());
-            System.out.println("Status: " + (enquiry.getAnswer() != null ? "Answered" : "Pending"));
-            if (enquiry.getAnswer() != null && !enquiry.getAnswer().isEmpty()) {
-                System.out.println("Answer: " + enquiry.getAnswer());
-            } else {
-                System.out.println("No answer yet.");
-            }
+        for (int i = 0; i < enquiries.size(); i++) {
+            displayEnquiry(i, enquiries.get(i), false);
         }
+    }
+
+    @Override
+    public void displayEnquiry(int index, Enquiry enquiry, boolean canReply) {
+        System.out.println((index + 1) + ". Project: " + enquiry.getProjectName() + 
+                (canReply ? " [Can Reply]" : " [View Only]"));
+        System.out.println("   ID: " + enquiry.getId());
+        System.out.println("   Applicant: " + enquiry.getApplicantName());
+        System.out.println("   Question: " + enquiry.getQuestion());
+        System.out.println("   Posted: " + enquiry.getFormattedCreatedDate());
+        if (enquiry.getAnswer() != null) {
+            System.out.println("   Answer: " + enquiry.getAnswer());
+            System.out.println("   Answered: " + enquiry.getFormattedAnsweredDate());
+            System.out.println("   Status: Answered");
+        } else {
+            System.out.println("   Status: Pending response");
+        }
+        System.out.println();
     }
 
     @Override

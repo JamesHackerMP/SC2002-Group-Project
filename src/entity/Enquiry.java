@@ -16,7 +16,7 @@ public class Enquiry implements EnquiryIdentification, EnquiryContent {
     private LocalDateTime answeredDate;
     private Status status;
     private int priority; 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd' | 'HH:mm:ss");
 
     public Enquiry(String id, String applicantName, String projectName, String question) {
         this.id = id;

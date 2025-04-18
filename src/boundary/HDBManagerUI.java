@@ -411,6 +411,28 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         System.out.print("Enter your choice: ");
         int decision = getMenuChoice();
         
+        if (decision == 0) {
+            System.out.println("Action canceled.");
+            return;
+        }
+        
+        if (decision != 1 && decision != 2) {
+            System.out.println("Invalid choice. No action taken.");
+            return;
+        }
+        
+        String action = (decision == 1) ? "approve" : "reject";
+        System.out.println("\nAre you sure you want to " + action + " officer " 
+                         + selectedOfficer + " for project '" + selectedProject.getName() + "'?");
+        System.out.println("1. Yes, confirm " + action);
+        System.out.println("0. No, cancel");
+        
+        int confirmChoice = getMenuChoice();
+        if (confirmChoice != 1) {
+            System.out.println("Action cancelled.");
+            return;
+        }
+        
         boolean success = false;
         switch (decision) {
             case 1 -> {
@@ -463,7 +485,6 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     
         int projectChoice;
         while (true) {
-            System.out.print("Enter your choice: ");
             projectChoice = getMenuChoice();
             
             if (projectChoice == 0) return;
@@ -500,7 +521,6 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     
         int appChoice;
         while (true) {
-            System.out.print("Enter your choice: ");
             appChoice = getMenuChoice();
             
             if (appChoice == 0) return;
@@ -529,8 +549,29 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         System.out.println("\n1. Approve application");
         System.out.println("2. Reject application");
         System.out.println("0. Cancel");
-        System.out.print("Enter your choice: ");
         int decision = getMenuChoice();
+        
+        if (decision == 0) {
+            System.out.println("Action canceled.");
+            return;
+        }
+        
+        if (decision != 1 && decision != 2) {
+            System.out.println("Invalid choice. No action taken.");
+            return;
+        }
+        
+        String action = (decision == 1) ? "approve" : "reject";
+        System.out.println("\nAre you sure you want to " + action + " the application for " 
+                         + selectedApp.getApplicantName() + "?");
+        System.out.println("1. Yes, confirm " + action);
+        System.out.println("0. No, cancel");
+        
+        int confirmChoice = getMenuChoice();
+        if (confirmChoice != 1) {
+            System.out.println("Action cancelled.");
+            return;
+        }
         
         switch (decision) {
             case 1 -> {
@@ -716,19 +757,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             }
             
             hasOtherEnquiries = true;
-            System.out.println((i + 1) + ". Project: " + enquiry.getProjectName() + " [View Only]");
-            System.out.println("   ID: " + enquiry.getId());
-            System.out.println("   Applicant: " + enquiry.getApplicantName());
-            System.out.println("   Question: " + enquiry.getQuestion());
-            System.out.println("   Posted: " + enquiry.getCreatedDate());
-            if (enquiry.getAnswer() != null) {
-                System.out.println("   Answer: " + enquiry.getAnswer());
-                System.out.println("   Answered: " + enquiry.getAnsweredDate());
-                System.out.println("   Status: Answered");
-            } else {
-                System.out.println("   Status: Pending response");
-            }
-            System.out.println();
+            displayEnquiry(i, enquiry, false);
         }
         
         if (!hasOtherEnquiries) {
@@ -746,19 +775,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             }
             
             hasOwnEnquiries = true;
-            System.out.println((i + 1) + ". Project: " + enquiry.getProjectName() + " [Can Reply]");
-            System.out.println("   ID: " + enquiry.getId());
-            System.out.println("   Applicant: " + enquiry.getApplicantName());
-            System.out.println("   Question: " + enquiry.getQuestion());
-            System.out.println("   Posted: " + enquiry.getCreatedDate());
-            if (enquiry.getAnswer() != null) {
-                System.out.println("   Answer: " + enquiry.getAnswer());
-                System.out.println("   Answered: " + enquiry.getAnsweredDate());
-                System.out.println("   Status: Answered");
-            } else {
-                System.out.println("   Status: Pending response");
-            }
-            System.out.println();
+            displayEnquiry(i, enquiry, true);
         }
         
         if (!hasOwnEnquiries) {
@@ -789,9 +806,10 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             if (selectedEnquiry.getAnswer() != null) {
                 System.out.println("This enquiry has already been answered.");
                 System.out.println("Current answer: " + selectedEnquiry.getAnswer());
-                System.out.print("Do you want to update the answer? (Y/N): ");
-                String updateDecision = scanner.nextLine().trim().toUpperCase();
-                if (!updateDecision.equals("Y")) {
+                System.out.println("1. Update answer");
+                System.out.println("0. Cancel");
+                int updateDecision = getMenuChoice();
+                if (updateDecision != 1) {
                     continue;
                 }
             }
@@ -808,6 +826,24 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             
             break;
         }
+    }
+
+    @Override
+    public void displayEnquiry(int index, Enquiry enquiry, boolean canReply) {
+        System.out.println((index + 1) + ". Project: " + enquiry.getProjectName() + 
+                (canReply ? " [Can Reply]" : " [View Only]"));
+        System.out.println("   ID: " + enquiry.getId());
+        System.out.println("   Applicant: " + enquiry.getApplicantName());
+        System.out.println("   Question: " + enquiry.getQuestion());
+        System.out.println("   Posted: " + enquiry.getFormattedCreatedDate());
+        if (enquiry.getAnswer() != null) {
+            System.out.println("   Answer: " + enquiry.getAnswer());
+            System.out.println("   Answered: " + enquiry.getFormattedAnsweredDate());
+            System.out.println("   Status: Answered");
+        } else {
+            System.out.println("   Status: Pending response");
+        }
+        System.out.println();
     }
 
     @Override
