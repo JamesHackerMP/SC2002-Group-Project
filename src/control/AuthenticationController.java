@@ -5,19 +5,51 @@ import entity.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
-import util.CSVReader;
-import util.CSVWriter;
+import util.FileDataHandler;
 
 public class AuthenticationController implements UserAuthenticationController, 
                                                UserManagementController,
                                                UserPersistenceController {
     private final Map<String, User> users;
+    private final FileDataHandler fileDataHandler;
     private static final String DEFAULT_PASSWORD = "password";
     private static final Pattern NRIC_PATTERN = Pattern.compile("^[ST]\\d{7}[A-Z]$");
 
-    public AuthenticationController() {
+    public AuthenticationController(FileDataHandler fileDataHandler) {
+        this.fileDataHandler = fileDataHandler;
         this.users = new HashMap<>();
         loadUsers();
+    }
+
+    @Override
+    public void saveUsers() {
+        try {
+            fileDataHandler.saveUsers(users);
+        } catch (IOException e) {
+            System.err.println("Error saving user data: " + e.getMessage());
+        }
+    }
+
+    private void loadUsers() {
+        try {
+            List<User> applicants = fileDataHandler.loadApplicants();
+            List<User> officers = fileDataHandler.loadOfficers();
+            List<User> managers = fileDataHandler.loadManagers();
+            
+            for (User user : applicants) {
+                users.put(user.getNric().toUpperCase(), user);
+            }
+            
+            for (User user : officers) {
+                users.put(user.getNric().toUpperCase(), user);
+            }
+            
+            for (User user : managers) {
+                users.put(user.getNric().toUpperCase(), user);
+            }
+        } catch (IOException e) {
+            System.err.println("Error loading user data: " + e.getMessage());
+        }
     }
 
     @Override
@@ -99,15 +131,6 @@ public class AuthenticationController implements UserAuthenticationController,
     }
 
     @Override
-    public void saveUsers() {
-        try {
-            CSVWriter.saveUsers(users);
-        } catch (IOException e) {
-            System.err.println("Error saving user data: " + e.getMessage());
-        }
-    }
-
-    @Override
     public int getUserCountByRole(String role) {
         int count = 0;
         for (User user : users.values()) {
@@ -118,58 +141,4 @@ public class AuthenticationController implements UserAuthenticationController,
         return count;
     }
 
-    private void loadUsers() {
-        try {
-            loadApplicants();
-            loadOfficers();
-            loadManagers();
-        } catch (IOException e) {
-            System.err.println("Error loading user data: " + e.getMessage());
-        }
-    }
-
-    private void loadApplicants() throws IOException {
-        List<String[]> data = CSVReader.readCSV("src\\data\\ApplicantList.csv");
-        for (String[] record : data) {
-            if (record.length >= 5) {
-                String name = record[0];
-                String nric = record[1];
-                int age = Integer.parseInt(record[2]);
-                String maritalStatus = record[3];
-                String password = record.length > 4 ? record[4] : DEFAULT_PASSWORD;
-
-                users.put(nric, new Applicant(name, nric, age, maritalStatus, password));
-            }
-        }
-    }
-
-    private void loadOfficers() throws IOException {
-        List<String[]> data = CSVReader.readCSV("src\\data\\OfficerList.csv");
-        for (String[] record : data) {
-            if (record.length >= 5) {
-                String name = record[0];
-                String nric = record[1];
-                int age = Integer.parseInt(record[2]);
-                String maritalStatus = record[3];
-                String password = record.length > 4 ? record[4] : DEFAULT_PASSWORD;
-
-                users.put(nric, new HDBOfficer(name, nric, age, maritalStatus, password));
-            }
-        }
-    }
-
-    private void loadManagers() throws IOException {
-        List<String[]> data = CSVReader.readCSV("src\\data\\ManagerList.csv");
-        for (String[] record : data) {
-            if (record.length >= 5) {
-                String name = record[0];
-                String nric = record[1];
-                int age = Integer.parseInt(record[2]);
-                String maritalStatus = record[3];
-                String password = record.length > 4 ? record[4] : DEFAULT_PASSWORD;
-
-                users.put(nric, new HDBManager(name, nric, age, maritalStatus, password));
-            }
-        }
-    }
 }

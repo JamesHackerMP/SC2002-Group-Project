@@ -260,6 +260,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         if (newVisibility && activeProject != null 
         && selectedProject.isOpenForApplication()) {
             System.out.println("Failed to update visibility. You cannot have two active project.");
+            return;
             }
 
         managerController.toggleProjectVisibility(selectedProject.getName(), newVisibility);

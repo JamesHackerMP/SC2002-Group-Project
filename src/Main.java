@@ -1,7 +1,7 @@
 import boundary.*;
 import control.*;
 import entity.*;
-
+import util.*;
 
 public class Main {
     private final AuthenticationController authController;
@@ -21,9 +21,11 @@ public class Main {
 
     public Main() {
 
-        this.authController = new AuthenticationController();
+        FileDataHandler fileDataHandler = new CSVFileHandler();
+        
+        this.authController = new AuthenticationController(fileDataHandler);
         this.filterController = new FilterController();
-        this.projectController = new ProjectController();
+        this.projectController = new ProjectController(fileDataHandler);
         this.applicationController = new ApplicationController(projectController);
         this.enquiryController = new EnquiryController();
         this.officerController = new OfficerController(projectController, applicationController);
@@ -34,7 +36,6 @@ public class Main {
         this.officerUI = new HDBOfficerUI(projectController, applicationController, enquiryController, officerController,
                 authController, filterController);
         this.managerUI = new HDBManagerUI(projectController, applicationController, enquiryController, managerController, authController, filterController);
-
     }
 
     public void run() {
