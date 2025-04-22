@@ -150,10 +150,11 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
             choice = getMenuChoice();
             
             switch (choice) {
-                case 0:
+                case 0 -> {
                     System.out.println("Application canceled.");
                     return;
-                case 1:
+                }
+                case 1 -> {
                     if (hasTwoRoom) {
                         flatTypeApply = "2-room";
                     } else if (hasThreeRoom) {
@@ -162,18 +163,19 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
                         System.out.println("Invalid choice. Application canceled.");
                         return;
                     }
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     if (hasTwoRoom && hasThreeRoom) {
                         flatTypeApply = "3-room";
                     } else {
                         System.out.println("Invalid choice. Application canceled.");
                         return;
                     }
-                    break;
-                default:
+                }
+                default -> {
                     System.out.println("Invalid choice. Application canceled.");
                     return;
+                }
             }
         } else {
             flatTypeApply = "2-room";
