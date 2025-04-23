@@ -96,9 +96,8 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
             if (currentProjectName != null) {
                 long pendingBookings = applicationController.getAllApplications().stream()
                 .filter(a -> {
-                    String applicantName = a.getApplicantName();
-                    return applicationController.checkProjectName(applicantName).equals(currentProjectName) && 
-                        applicationController.isStatusSuccessful(applicantName);
+                    return applicationController.checkProjectName(a).equals(a) && 
+                        applicationController.isStatusSuccessful(a);
                 })
                 .count();
                 
@@ -135,9 +134,8 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
                     
                     long pendingApps = applicationController.getAllApplications().stream()
                             .filter(a -> {
-                                String applicantName = a.getApplicantName();
-                                return applicationController.checkProjectName(applicantName).equals(projectName) && 
-                                applicationController.isStatusPending(applicantName);
+                                return applicationController.checkProjectName(a).equals(projectName) && 
+                                applicationController.isStatusPending(a);
                             })
                             .count();
                     totalPendingApplications += pendingApps;

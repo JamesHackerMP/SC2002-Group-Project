@@ -5,7 +5,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ProjectManagementController {
-    boolean createProject(Project project);
+    boolean createProject(String name, String neighborhood, int twoRoomUnits, int twoRoomPrice,
+    int threeRoomUnits, int threeRoomPrice, LocalDate openingDate,
+    LocalDate closingDate, String manager, int officerSlots);
     boolean updateProject(Project project);
     boolean deleteProject(String projectName);
     boolean saveProjects();
@@ -26,4 +28,7 @@ public interface ProjectManagementController {
     boolean checkHasThreeRoomUnits(String projectName);
     boolean checkVisible(String projectName);
     List<String> checkPendingOfficers(String projectName);
+    void updateNeighborhood(String projectName, String neighborhood);   
+    void updateTwoRoomUnits(String projectName, int twoRoomUnits);
+    void updateThreeRoomUnits(String projectName, int threeRoomUnits);
 }

@@ -2,7 +2,6 @@ package boundary;
 
 import boundary.interfaces.manager.*;
 import control.*;
-import entity.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -21,7 +20,9 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     public HDBManagerUI(ProjectController projectController,
                         ApplicationController applicationController,
                         EnquiryController enquiryController,
-                        ManagerController managerController, AuthenticationController authController, FilterController filterController) {
+                        ManagerController managerController, 
+                        AuthenticationController authController, 
+                        FilterController filterController) {
         this.projectController = projectController;
         this.applicationController = applicationController;
         this.enquiryController = enquiryController;
@@ -32,7 +33,8 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     }
 
     @Override
-    public void displayMenu(HDBManager manager) {
+    public void displayMenu(String managerName) {
+        displayManagerNotifications(managerName);
         while (true) {
             System.out.println("\n=== HDB Manager Menu ===");
             System.out.println("1. View All Projects");
@@ -46,19 +48,62 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             int choice = getMenuChoice();
             switch (choice) {
                 case 1 -> viewAllProjects();
-                case 2 -> manageProjects(manager);
-                case 3 -> handlePendingOfficers(manager);
-                case 4 -> processApplications(manager);
-                case 5 -> manageEnquiries(manager);
+                case 2 -> manageProjects(managerName);
+                case 3 -> handlePendingOfficers(managerName);
+                case 4 -> processApplications(managerName);
+                case 5 -> manageEnquiries(managerName);
                 case 6 -> generateReports();
-                case 0 -> {return;}
+                case 0 -> { return; }
                 default -> System.out.println("Invalid choice. Please try again.");
             }
         }
     }
-    
+
+    public void displayManagerNotifications(String managerName) {
+        List<String> managerProjectNames = projectController.getProjectsByManager(managerName);
+        if (!managerProjectNames.isEmpty()) {
+            int totalPendingOfficers = 0;
+            int totalPendingApplications = 0;
+            int totalUnansweredEnquiries = 0;
+            
+            for (String projectName : managerProjectNames) {
+                totalPendingOfficers += projectController.checkPendingOfficers(projectName).size();
+                
+                long pendingApps = applicationController.getAllApplications().stream()
+                        .filter(a -> applicationController.checkProjectName(a).equals(projectName) && 
+                                    applicationController.isStatusPending(a))
+                        .count();
+                totalPendingApplications += pendingApps;
+                
+                long unanswered = enquiryController.getEnquiriesByProject(projectName).stream()
+                        .filter(e -> enquiryController.checkAnswer(e) == null)
+                        .count();
+                totalUnansweredEnquiries += unanswered;
+            }
+            
+            if (totalPendingOfficers > 0) {
+                System.out.println("\nNOTIFICATION: You have " + totalPendingOfficers + 
+                                " pending officer registrations.");
+            }
+            
+            if (totalPendingApplications > 0) {
+                System.out.println("\nNOTIFICATION: You have " + totalPendingApplications + 
+                                " applications to process.");
+            }
+            
+            if (totalUnansweredEnquiries > 0) {
+                System.out.println("\nNOTIFICATION: You have " + totalUnansweredEnquiries + 
+                                " unanswered enquiries across your projects.");
+            }
+            
+            if (totalPendingOfficers == 0 && totalPendingApplications == 0 && totalUnansweredEnquiries == 0) {
+                System.out.println("\nNOTIFICATION: No pending tasks to handle.");
+            }
+        }
+    }
+
     @Override
-    public void manageProjects(HDBManager manager) {
+    public void manageProjects(String managerName) {
         while (true) {
             System.out.println("\n=== Manage Projects ===");
             System.out.println("1. Create New Project");
@@ -69,19 +114,19 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     
             int choice = getMenuChoice();
             switch (choice) {
-                case 1 -> createProject(manager);
-                case 2 -> editProject(manager);
-                case 3 -> deleteProject(manager);
-                case 4 -> toggleVisibility(manager);
-                case 0 -> {return;}
+                case 1 -> createProject(managerName);
+                case 2 -> editProject(managerName);
+                case 3 -> deleteProject(managerName);
+                case 4 -> toggleVisibility(managerName);
+                case 0 -> { return; }
                 default -> System.out.println("Invalid choice. Please try again.");
             }
         }
     }
 
     @Override
-    public void createProject(HDBManager manager) {
-        if (projectController.getActiveProjectByManager(manager.getName()) != null) {
+    public void createProject(String managerName) {
+        if (projectController.getActiveProjectByManager(managerName) != null) {
             System.out.println("You already have an active project.");
             return;
         }
@@ -91,8 +136,8 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         System.out.print("Project Name: ");
         String name = scanner.nextLine();
 
-        if (projectController.getAllProjects().stream().anyMatch(p -> p.getName().equals(name))) {
-            System.out.println("There is a project has the same name.");
+        if (projectController.getProject(name) != null) {
+            System.out.println("There is a project with the same name.");
             return;
         }
 
@@ -118,120 +163,112 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         }
 
         System.out.print("Application Opening Date (yyyy/MM/dd): ");
-        LocalDate openingDate = LocalDate.parse(scanner.nextLine(), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        String openingDateStr = scanner.nextLine();
+        LocalDate openingDate = LocalDate.parse(openingDateStr, DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 
         System.out.print("Application Closing Date (yyyy/MM/dd): ");
-        LocalDate closingDate = LocalDate.parse(scanner.nextLine(), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        String closingDateStr = scanner.nextLine();
+        LocalDate closingDate = LocalDate.parse(closingDateStr, DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 
         System.out.print("Officer Slots (max 10): ");
         int officerSlots = Integer.parseInt(scanner.nextLine());
         officerSlots = Math.min(officerSlots, 10);
 
-        Project newProject = new Project(name, neighborhood, twoRoomUnits, twoRoomPrice,
-                threeRoomUnits, threeRoomPrice, openingDate,
-                closingDate, manager.getName(), officerSlots);
+        boolean success = projectController.createProject(name, neighborhood, twoRoomUnits, twoRoomPrice,
+                threeRoomUnits, threeRoomPrice, openingDate, closingDate, managerName, officerSlots);
 
-        if (projectController.createProject(newProject)) {
+        if (success) {
             System.out.println("Project created successfully!");
         } else {
-            System.out.println("Failed to create project. You might have a active project at that time.");
+            System.out.println("Failed to create project. You might have an active project at that time.");
         }
     }
 
     @Override
-    public void editProject(HDBManager manager) {
-        List<Project> managerProjects = projectController.getProjectsByManager(manager.getName());
+    public void editProject(String managerName) {
+        List<String> projectNames = projectController.getProjectsByManager(managerName);
     
-        if (managerProjects.isEmpty()) {
+        if (projectNames.isEmpty()) {
             System.out.println("You are not managing any projects.");
             return;
         }
     
         System.out.println("\n=== Your Projects ===");
-        for (int i = 0; i < managerProjects.size(); i++) {
-            Project project = managerProjects.get(i);
+        for (int i = 0; i < projectNames.size(); i++) {
+            String projectName = projectNames.get(i);
             System.out.printf("%d. %s (Neighborhood: %s, 2-Room Units: %d, 3-Room Units: %d)%n",
-                    i + 1, project.getName(), project.getNeighborhood(),
-                    project.getTwoRoomUnits(), project.getThreeRoomUnits());
+                    i + 1, projectName, projectController.checkNeighborhood(projectName),
+                    projectController.checkTwoRoomUnits(projectName), projectController.checkThreeRoomUnits(projectName));
         }
         System.out.println("0. Cancel");
     
-        int projectChoice = -1;
-        while (projectChoice < 0 || projectChoice > managerProjects.size()) {
-            System.out.print("\nSelect a project to edit (Enter number) ");
-            try {
-                projectChoice = Integer.parseInt(scanner.nextLine());
-                if (projectChoice == 0) {
-                    System.out.println("Edit canceled.");
-                    return;
-                }
-                if (projectChoice < 1 || projectChoice > managerProjects.size()) {
-                    System.out.println("Invalid selection. Please try again.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
-            }
+        int projectChoice = getMenuChoice();
+        if (projectChoice == 0) {
+            System.out.println("Edit canceled.");
+            return;
+        }
+        if (projectChoice < 1 || projectChoice > projectNames.size()) {
+            System.out.println("Invalid selection. Please try again.");
+            return;
         }
     
-        Project selectedProject = managerProjects.get(projectChoice - 1);
+        String selectedProjectName = projectNames.get(projectChoice - 1);
     
-        System.out.println("\n=== Editing Project: " + selectedProject.getName() + " ===");
-        System.out.println("Current Neighborhood: " + selectedProject.getNeighborhood());
+        System.out.println("\n=== Editing Project: " + selectedProjectName + " ===");
+        System.out.println("Current Neighborhood: " + projectController.checkNeighborhood(selectedProjectName));
         System.out.print("Enter new neighborhood (or press Enter to keep current): ");
         String newNeighborhood = scanner.nextLine();
         if (!newNeighborhood.isBlank()) {
-            selectedProject.setNeighborhood(newNeighborhood);
+            projectController.updateNeighborhood(selectedProjectName, newNeighborhood);
         }
     
-        System.out.println("Current 2-Room Units: " + selectedProject.getTwoRoomUnits());
+        System.out.println("Current 2-Room Units: " + projectController.checkTwoRoomUnits(selectedProjectName));
         System.out.print("Enter new number of 2-Room Units (or press Enter to keep current): ");
         String newTwoRoomUnits = scanner.nextLine();
         if (!newTwoRoomUnits.isBlank()) {
             try {
-                selectedProject.setTwoRoomUnits(Integer.parseInt(newTwoRoomUnits));
+                projectController.updateTwoRoomUnits(selectedProjectName, Integer.parseInt(newTwoRoomUnits));
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Keeping current value.");
             }
         }
     
-        System.out.println("Current 3-Room Units: " + selectedProject.getThreeRoomUnits());
+        System.out.println("Current 3-Room Units: " + projectController.checkThreeRoomUnits(selectedProjectName));
         System.out.print("Enter new number of 3-Room Units (or press Enter to keep current): ");
         String newThreeRoomUnits = scanner.nextLine();
         if (!newThreeRoomUnits.isBlank()) {
             try {
-                selectedProject.setThreeRoomUnits(Integer.parseInt(newThreeRoomUnits));
+                projectController.updateThreeRoomUnits(selectedProjectName, Integer.parseInt(newThreeRoomUnits));
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Keeping current value.");
             }
         }
     
-        if (projectController.saveProjects()) {
-            System.out.println("Project updated successfully.");
-        } else {
-            System.out.println("Failed to update project.");
-        }
+        System.out.println("Project updated successfully.");
     }
 
     @Override
-    public void deleteProject(HDBManager manager) {
-        System.out.println("\n=== Your Projects ===");
-        List<Project> managerProjects = projectController.getProjectsByManager(manager.getName());
+    public void deleteProject(String managerName) {
+        List<String> projectNames = projectController.getProjectsByManager(managerName);
 
-        if (managerProjects.isEmpty()) {
+        if (projectNames.isEmpty()) {
             System.out.println("You are not managing any projects.");
             return;
         }
 
-        for (Project project : managerProjects) {
-            System.out.println("\nProject Name: " + project.getName());
-            System.out.println("Neighborhood: " + project.getNeighborhood());
+        System.out.println("\n=== Your Projects ===");
+        for (String projectName : projectNames) {
+            System.out.println("\nProject Name: " + projectName);
+            System.out.println("Neighborhood: " + projectController.checkNeighborhood(projectName));
         }
         System.out.println("0. Cancel");
 
         System.out.print("\nEnter project name to delete: ");
         String projectName = scanner.nextLine();
 
-        if (projectName.equals("0")) return;
+        if (projectName.equals("0")) {
+            return;
+        }
 
         if (projectController.deleteProject(projectName)) {
             System.out.println("Project deleted successfully!");
@@ -241,111 +278,103 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     }
 
     @Override
-    public void toggleVisibility(HDBManager manager) {
-        System.out.println("\n=== Your Projects ===");
-        List<Project> managerProjects = projectController.getProjectsByManager(manager.getName());
+    public void toggleVisibility(String managerName) {
+        List<String> projectNames = projectController.getProjectsByManager(managerName);
     
-        if (managerProjects.isEmpty()) {
+        if (projectNames.isEmpty()) {
             System.out.println("You are not managing any projects.");
             return;
         }
     
-        for (int i = 0; i < managerProjects.size(); i++) {
-            Project project = managerProjects.get(i);
+        System.out.println("\n=== Your Projects ===");
+        for (int i = 0; i < projectNames.size(); i++) {
+            String projectName = projectNames.get(i);
             System.out.printf("%d. %s (Current Status: %s)%n", 
-                    i + 1, project.getName(), project.isVisible() ? "Visible" : "Hidden");
+                    i + 1, projectName, projectController.checkVisible(projectName) ? "Visible" : "Hidden");
         }
         System.out.println("0. Cancel");
     
-        int choice;
-        while (true) {
-            System.out.print("\nSelect a project to toggle visibility (Enter number) ");
-
-            choice = getMenuChoice();
-            
-            if (choice == 0) return;
-            
-            if (choice < 1 || choice > managerProjects.size()) {
-                System.out.println("Invalid selection. Please try again.");
-            } else {
-                break;
-            }
+        int choice = getMenuChoice();
+        if (choice == 0) {
+            System.out.println("Action canceled.");
+            return;
+        }
+        if (choice < 1 || choice > projectNames.size()) {
+            System.out.println("Invalid selection. Please try again.");
+            return;
         }
     
-        Project selectedProject = managerProjects.get(choice - 1);
-        Project activeProject = projectController.getActiveProjectByManager(manager.getName());
-        boolean newVisibility = !selectedProject.isVisible();
+        String selectedProjectName = projectNames.get(choice - 1);
+        boolean currentVisibility = projectController.checkVisible(selectedProjectName);
+        boolean newVisibility = !currentVisibility;
 
-        if (newVisibility && activeProject != null 
-        && selectedProject.isOpenForApplication()) {
-            System.out.println("Failed to update visibility. You cannot have two active project.");
+        if (newVisibility && projectController.getActiveProjectByManager(managerName) != null) {
+            System.out.println("Failed to update visibility. You cannot have two active projects.");
             return;
-            }
+        }
 
-        managerController.toggleProjectVisibility(selectedProject.getName(), newVisibility);
+        managerController.toggleProjectVisibility(selectedProjectName, newVisibility);
         System.out.println("Project visibility set to: " + (newVisibility ? "Visible" : "Hidden"));
-
     }
 
     @Override
     public void viewAllProjects() {
         System.out.println("\n=== All BTO Projects ===");
     
-        Filter filter = filterController.getFilter();
         System.out.println("Current Filters:");
-        if (filter.getNeighborhood() != null) {
-            System.out.println("Neighborhood: " + filter.getNeighborhood());
+        if (filterController.checkNeighborhood() != null) {
+            System.out.println("Neighborhood: " + filterController.checkNeighborhood());
         }
-        if (filter.getFlatTypes() != null && !filter.getFlatTypes().isEmpty()) {
-            System.out.println("Flat Types: " + filter.getFlatTypes());
+        if (filterController.checkFlatTypes() != null && !filterController.checkFlatTypes().isEmpty()) {
+            System.out.println("Flat Types: " + filterController.checkFlatTypes());
         }
-        if (filter.getOpeningAfter() != null) {
-            System.out.println("Opening After: " + filter.getOpeningAfter());
+        if (filterController.checkOpeningAfter() != null) {
+            System.out.println("Opening After: " + filterController.checkOpeningAfter());
         }
-        if (filter.getClosingBefore() != null) {
-            System.out.println("Closing Before: " + filter.getClosingBefore());
+        if (filterController.checkClosingBefore() != null) {
+            System.out.println("Closing Before: " + filterController.checkClosingBefore());
         }
-        if (filter.getManager() != null) {
-            System.out.println("Manager: " + filter.getManager());
+        if (filterController.checkManager() != null) {
+            System.out.println("Manager: " + filterController.checkManager());
         }
-        if (filter.getOfficer() != null) {
-            System.out.println("Officer: " + filter.getOfficer());
+        if (filterController.checkOfficer() != null) {
+            System.out.println("Officer: " + filterController.checkOfficer());
         }
     
-        List<Project> allProjects = filterController.applyFilters(projectController.getAllProjects());
+        List<String> projectNames = filterController.applyFilters(projectController.getAllProjects());
     
-        if (allProjects.isEmpty()) {
+        if (projectNames.isEmpty()) {
             System.out.println("No projects available with the current filters.");
             return;
         }
     
-        for (Project project : allProjects) {
-            System.out.println("\nProject Name: " + project.getName());
-            System.out.println("Neighborhood: " + project.getNeighborhood());
-            System.out.println("2-Room Units Available: " + project.getTwoRoomUnits());
-            System.out.println("2-Room Price: " + project.getTwoRoomPrice());
-            System.out.println("3-Room Units: " + project.getThreeRoomUnits());
-            System.out.println("3-Room Price: " + project.getThreeRoomPrice());
-            System.out.println("Opening Date: " + project.getOpeningDate());
-            System.out.println("Closing Date: " + project.getClosingDate());
-            System.out.println("Manager: " + project.getManager());
-            System.out.println("Visibility: " + (project.isVisible() ? "ON" : "OFF"));
+        for (String projectName : projectNames) {
+            System.out.println("\nProject Name: " + projectName);
+            System.out.println("Neighborhood: " + projectController.checkNeighborhood(projectName));
+            System.out.println("2-Room Units Available: " + projectController.checkTwoRoomUnits(projectName));
+            System.out.println("2-Room Price: " + projectController.checkTwoRoomPrice(projectName));
+            System.out.println("3-Room Units: " + projectController.checkThreeRoomUnits(projectName));
+            System.out.println("3-Room Price: " + projectController.checkThreeRoomPrice(projectName));
+            System.out.println("Opening Date: " + projectController.checkOpeningDate(projectName));
+            System.out.println("Closing Date: " + projectController.checkClosingDate(projectName));
+            System.out.println("Manager: " + projectController.checkManager(projectName));
+            System.out.println("Visibility: " + (projectController.checkVisible(projectName) ? "ON" : "OFF"));
             System.out.println("----------------------------------------");
         }
     }
 
     @Override
-    public void handlePendingOfficers(HDBManager manager) {
-        List<Project> myProjects = projectController.getProjectsByManager(manager.getName());
-        List<Project> projectsWithPendingOfficers = new ArrayList<>();
+    public void handlePendingOfficers(String managerName) {
+        List<String> projectNames = projectController.getProjectsByManager(managerName);
+        List<String> projectsWithPendingOfficers = new ArrayList<>();
     
         System.out.println("\n=== Pending Officer Registrations ===");
-        for (Project project : myProjects) {
-            List<String> pending = project.getPendingOfficers();
-            if (!pending.isEmpty()) {
-                projectsWithPendingOfficers.add(project);
-                System.out.println((projectsWithPendingOfficers.size()) + ". Project: " + project.getName());
-                for (String officer : pending) {
+        for (String projectName : projectNames) {
+            List<String> pendingOfficers = projectController.checkPendingOfficers(projectName);
+            if (!pendingOfficers.isEmpty()) {
+                projectsWithPendingOfficers.add(projectName);
+                System.out.println((projectsWithPendingOfficers.size()) + ". Project: " + projectName);
+                for (String officer : pendingOfficers) {
                     System.out.println("   - " + officer);
                 }
             }
@@ -356,50 +385,39 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             return;
         }
     
-        int projectChoice;
-        while (true) {
-            System.out.print("\nSelect a project to process (Enter number) ");
-            projectChoice = getMenuChoice();
-            
-            if (projectChoice == 0) return;
-            
-            if (projectChoice < 1 || projectChoice > projectsWithPendingOfficers.size()) {
-                System.out.println("Invalid selection. Please try again.");
-            } else {
-                break;
-            }
+        int projectChoice = getMenuChoice();
+        if (projectChoice == 0) {
+            return;
+        }
+        if (projectChoice < 1 || projectChoice > projectsWithPendingOfficers.size()) {
+            System.out.println("Invalid selection. Please try again.");
+            return;
         }
     
-        Project selectedProject = projectsWithPendingOfficers.get(projectChoice - 1);
-        List<String> pendingOfficers = selectedProject.getPendingOfficers();
+        String selectedProjectName = projectsWithPendingOfficers.get(projectChoice - 1);
+        List<String> pendingOfficers = projectController.checkPendingOfficers(selectedProjectName);
     
-        System.out.println("\n=== Pending Officers for Project: " + selectedProject.getName() + " ===");
+        System.out.println("\n=== Pending Officers for Project: " + selectedProjectName + " ===");
         for (int i = 0; i < pendingOfficers.size(); i++) {
             System.out.println((i + 1) + ". " + pendingOfficers.get(i));
         }
     
-        int officerChoice;
-        while (true) {
-            System.out.print("\nSelect an officer to process (Enter number) ");
-            officerChoice = getMenuChoice();
-            
-            if (officerChoice == 0) return;
-            
-            if (officerChoice < 1 || officerChoice > pendingOfficers.size()) {
-                System.out.println("Invalid selection. Please try again.");
-            } else {
-                break;
-            }
+        int officerChoice = getMenuChoice();
+        if (officerChoice == 0) {
+            return;
+        }
+        if (officerChoice < 1 || officerChoice > pendingOfficers.size()) {
+            System.out.println("Invalid selection. Please try again.");
+            return;
         }
     
         String selectedOfficer = pendingOfficers.get(officerChoice - 1);
     
-        User officer = authController.getUser(selectedOfficer);
-        if (officer != null) {
+        if (authController.getUser(selectedOfficer) != null) {
             System.out.println("\n=== Officer Details ===");
-            System.out.println("Name: " + officer.getName());
-            System.out.println("Age: " + officer.getAge());
-            System.out.println("Marital Status: " + officer.getMaritalStatus());
+            System.out.println("Name: " + selectedOfficer);
+            System.out.println("Age: " + authController.checkAge(selectedOfficer));
+            System.out.println("Marital Status: " + authController.checkMaritalStatus(selectedOfficer));
         } else {
             System.out.println("Failed to retrieve officer details.");
             return;
@@ -408,7 +426,6 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         System.out.println("\n1. Approve officer");
         System.out.println("2. Reject officer");
         System.out.println("0. Cancel");
-        System.out.print("Enter your choice: ");
         int decision = getMenuChoice();
         
         if (decision == 0) {
@@ -423,7 +440,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         
         String action = (decision == 1) ? "approve" : "reject";
         System.out.println("\nAre you sure you want to " + action + " officer " 
-                         + selectedOfficer + " for project '" + selectedProject.getName() + "'?");
+                         + selectedOfficer + " for project '" + selectedProjectName + "'?");
         System.out.println("1. Yes, confirm " + action);
         System.out.println("0. No, cancel");
         
@@ -433,41 +450,36 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             return;
         }
         
-        switch (decision) {
-            case 1 -> {
-                boolean success = managerController.approveOfficer(selectedOfficer, selectedProject.getName());
-                System.out.println(success ? "Officer approved successfully." : "Failed to approve officer.");
-            }
-            case 2 -> {
-                boolean success = managerController.rejectOfficer(selectedOfficer, selectedProject.getName());
-                System.out.println(success ? "Officer rejected successfully." : "Failed to reject officer.");
-            }
-            case 0 -> System.out.println("Action canceled.");
-            default -> System.out.println("Invalid choice. No action taken.");
-        }
+        boolean success = (decision == 1) ? 
+            managerController.approveOfficer(selectedOfficer, selectedProjectName) :
+            managerController.rejectOfficer(selectedOfficer, selectedProjectName);
+        System.out.println(success ? "Officer " + action + "d successfully." : "Failed to " + action + " officer.");
     }
 
     @Override
-    public void processApplications(HDBManager manager) {
-        System.out.println("\n=== Your Projects ===");
-        List<Project> managerProjects = projectController.getProjectsByManager(manager.getName());
+    public void processApplications(String managerName) {
+        List<String> projectNames = projectController.getProjectsByManager(managerName);
     
-        if (managerProjects.isEmpty()) {
+        if (projectNames.isEmpty()) {
             System.out.println("You are not managing any projects.");
             return;
         }
     
-        List<Project> projectsWithPendingActions = new ArrayList<>();
-        for (Project project : managerProjects) {
-            long pendingApplicationsCount = applicationController.getAllApplications().stream()
-                    .filter(a -> a.getProjectName().equals(project.getName()) &&
-                            a.getStatus() == Application.Status.PENDING)
-                    .count();
-    
-            if (pendingApplicationsCount > 0) {
-                projectsWithPendingActions.add(project);
-                System.out.println("\nProject: " + project.getName());
-                System.out.println("Pending Applications: " + pendingApplicationsCount);
+        List<String> projectsWithPendingActions = new ArrayList<>();
+        int pendingCount = 0;
+        System.out.println("\n=== Your Projects ===");
+        for (String projectName : projectNames) {
+            long pendingApps = applicationController.getAllApplications().stream()
+                            .filter(a -> {
+                                return applicationController.checkProjectName(a).equals(projectName) && 
+                                applicationController.isStatusPending(a);
+                            })
+                            .count();
+                            pendingCount += pendingApps;
+            if (pendingCount > 0) {
+                projectsWithPendingActions.add(projectName);
+                System.out.println("\nProject: " + projectName);
+                System.out.println("Pending Applications: " + pendingCount);
             }
         }
     
@@ -478,68 +490,59 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     
         System.out.println("\nSelect a project to process (Enter number)");
         for (int i = 0; i < projectsWithPendingActions.size(); i++) {
-            System.out.println((i + 1) + ". " + projectsWithPendingActions.get(i).getName());
+            System.out.println((i + 1) + ". " + projectsWithPendingActions.get(i));
         }
         System.out.println("0. Cancel");
     
-        int projectChoice;
-        while (true) {
-            projectChoice = getMenuChoice();
-            
-            if (projectChoice == 0) return;
-            
-            if (projectChoice < 1 || projectChoice > projectsWithPendingActions.size()) {
-                System.out.println("Invalid selection. Please try again.");
-            } else {
-                break;
-            }
+        int projectChoice = getMenuChoice();
+        if (projectChoice == 0) {
+            return;
+        }
+        if (projectChoice < 1 || projectChoice > projectsWithPendingActions.size()) {
+            System.out.println("Invalid selection. Please try again.");
+            return;
         }
     
-        Project selectedProject = projectsWithPendingActions.get(projectChoice - 1);
-        processPendingApplications(selectedProject);
+        String selectedProjectName = projectsWithPendingActions.get(projectChoice - 1);
+        processPendingApplications(selectedProjectName);
     }
     
     @Override
-    public void processPendingApplications(Project project) {
-        System.out.println("\n=== Pending Applications for " + project.getName() + " ===");
-        List<Application> pendingApps = applicationController.getAllApplications().stream()
-                .filter(a -> a.getProjectName().equals(project.getName()) &&
-                        a.getStatus() == Application.Status.PENDING)
+    public void processPendingApplications(String projectName) {
+        System.out.println("\n=== Pending Applications for " + projectName + " ===");
+
+        List<String> applicantNames = applicationController.getAllApplications().stream()
+                .filter(a -> applicationController.checkProjectName(a).equals(projectName) &&
+                    applicationController.isStatusPending(a))
                 .toList();
     
-        if (pendingApps.isEmpty()) {
+        if (applicantNames.isEmpty()) {
             System.out.println("No pending applications for this project.");
             return;
         }
     
-        for (int i = 0; i < pendingApps.size(); i++) {
-            Application app = pendingApps.get(i);
-            System.out.println((i + 1) + ". Applicant: " + app.getApplicantName());
+        for (int i = 0; i < applicantNames.size(); i++) {
+            System.out.println((i + 1) + ". Applicant: " + applicantNames.get(i));
         }
         System.out.println("0. Cancel");
     
-        int appChoice;
-        while (true) {
-            appChoice = getMenuChoice();
-            
-            if (appChoice == 0) return;
-            
-            if (appChoice < 1 || appChoice > pendingApps.size()) {
-                System.out.println("Invalid selection. Please try again.");
-            } else {
-                break;
-            }
+        int appChoice = getMenuChoice();
+        if (appChoice == 0) {
+            return;
+        }
+        if (appChoice < 1 || appChoice > applicantNames.size()) {
+            System.out.println("Invalid selection. Please try again.");
+            return;
         }
     
-        Application selectedApp = pendingApps.get(appChoice - 1);
+        String selectedApplicant = applicantNames.get(appChoice - 1);
     
-        User applicant = authController.getUser(selectedApp.getApplicantName());
-        if (applicant != null) {
+        if (authController.getUser(selectedApplicant) != null) {
             System.out.println("\n=== Applicant Details ===");
-            System.out.println("Name: " + applicant.getName());
-            System.out.println("Age: " + applicant.getAge());
-            System.out.println("Marital Status: " + applicant.getMaritalStatus());
-            System.out.println("Flat Type Apply: " + selectedApp.getFlatTypeApply());
+            System.out.println("Name: " + selectedApplicant);
+            System.out.println("Age: " + authController.checkAge(selectedApplicant));
+            System.out.println("Marital Status: " + authController.checkMaritalStatus(selectedApplicant));
+            System.out.println("Flat Type Apply: " + applicationController.checkFlatTypeApply(selectedApplicant));
         } else {
             System.out.println("Failed to retrieve applicant details.");
             return;
@@ -562,7 +565,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         
         String action = (decision == 1) ? "approve" : "reject";
         System.out.println("\nAre you sure you want to " + action + " the application for " 
-                         + selectedApp.getApplicantName() + "?");
+                         + selectedApplicant + "?");
         System.out.println("1. Yes, confirm " + action);
         System.out.println("0. No, cancel");
         
@@ -572,24 +575,10 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             return;
         }
         
-        switch (decision) {
-            case 1 -> {
-                if (applicationController.approveApplication(selectedApp.getApplicantName())) {
-                    System.out.println("Application approved.");
-                } else {
-                    System.out.println("Failed to approve application.");
-                }
-            }
-            case 2 -> {
-                if (applicationController.rejectApplication(selectedApp.getApplicantName())) {
-                    System.out.println("Application rejected.");
-                } else {
-                    System.out.println("Failed to reject application.");
-                }
-            }
-            case 0 -> System.out.println("Action canceled.");
-            default -> System.out.println("Invalid choice. No action taken.");
-        }
+        boolean success = (decision == 1) ? 
+            applicationController.approveApplication(selectedApplicant) :
+            applicationController.rejectApplication(selectedApplicant);
+        System.out.println(success ? "Application " + action + "d." : "Failed to " + action + " application.");
     }
 
     @Override
@@ -628,16 +617,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                 int maritalChoice = getMenuChoice();
                 if (maritalChoice == 0) return;
     
-                String maritalStatus = switch (maritalChoice) {
-                    case 1 -> "Married";
-                    case 2 -> "Single";
-                    default -> null;
-                };
-
-                if (maritalStatus == null) {
-                    System.out.println("Invalid choice.");
-                    return;
-                }
+                String maritalStatus = maritalChoice == 1 ? "Married" : "Single";
                 reportType = "Applicants by Marital Status: " + maritalStatus;
                 filters.put("maritalStatus", maritalStatus);
             }
@@ -649,41 +629,31 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                 int flatTypeChoice = getMenuChoice();
                 if (flatTypeChoice == 0) return;
     
-                String flatType = switch (flatTypeChoice) {
-                    case 1 -> "2-Room";
-                    case 2 -> "3-Room";
-                    default -> null;
-                };
-                if (flatType == null) {
-                    System.out.println("Invalid choice.");
-                    return;
-                }
-
+                String flatType = flatTypeChoice == 1 ? "2-Room" : "3-Room";
                 reportType = "Applicants by Flat Type: " + flatType;
                 filters.put("flatType", flatType);
             }
             case 6 -> {
-                List<Project> allProjects = projectController.getAllProjects();
-                if (allProjects.isEmpty()) {
+                List<String> projectNames = projectController.getAllProjects();
+                if (projectNames.isEmpty()) {
                     System.out.println("No projects available.");
                     return;
                 }
     
                 System.out.println("\nSelect a Project (Enter number)");
-                for (int i = 0; i < allProjects.size(); i++) {
-                    System.out.println((i + 1) + ". " + allProjects.get(i).getName());
+                for (int i = 0; i < projectNames.size(); i++) {
+                    System.out.println((i + 1) + ". " + projectNames.get(i));
                 }
                 System.out.println("0. Cancel");
     
                 int projectChoice = getMenuChoice();
                 if (projectChoice == 0) return;
-    
-                if (projectChoice < 1 || projectChoice > allProjects.size()) {
+                if (projectChoice < 1 || projectChoice > projectNames.size()) {
                     System.out.println("Invalid choice.");
                     return;
                 }
     
-                String projectName = allProjects.get(projectChoice - 1).getName();
+                String projectName = projectNames.get(projectChoice - 1);
                 reportType = "Applicants by Project Name: " + projectName;
                 filters.put("projectName", projectName);
             }
@@ -702,21 +672,25 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             }
         }
     
-        Report report = managerController.generateApplicationsReport(filters);
+        boolean success = managerController.generateApplicationsReport(filters);
     
+        if (!success) {
+            System.out.println("Failed to generate report.");
+            return;
+        }
+        
         System.out.println("\n=== " + reportType + " Report ===");
-        System.out.println("Generated on: " + report.getGeneratedDate().toLocalDate());
-    
-        if (report.getData().isEmpty()) {
+        System.out.println("Generated on: " + managerController.getReportGeneratedDate().toLocalDate());
+        
+        if (!managerController.hasReportData()) {
             System.out.println("No data found for the selected report type.");
             return;
         }
-    
-        for (String[] row : report.getData()) {
+        
+        for (String[] row : managerController.getReportData()) {
             System.out.println("\nApplicant: " + row[0]);
             System.out.println("Project: " + row[1]);
             System.out.println("Status: " + row[2]);
-    
             if (row.length > 3 && row[3] != null && !row[3].equals("N/A")) {
                 System.out.println("Flat Type: " + row[3]);
             }
@@ -730,114 +704,97 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
     }
 
     @Override
-    public void manageEnquiries(HDBManager manager) {
-        String managerName = manager.getName();
-        List<Project> managerProjects = projectController.getProjectsByManager(managerName);
-        List<String> managedProjectNames = managerProjects.stream()
-                                            .map(Project::getName)
-                                            .toList();
+    public void manageEnquiries(String managerName) {
+        List<String> projectNames = projectController.getProjectsByManager(managerName);
+        List<String> enquiryIds = enquiryController.getAllEnquiries();
         
-        System.out.println("\n=== All Enquiries ===");
-        List<Enquiry> allEnquiries = enquiryController.getAllEnquiries();
-        
-        if (allEnquiries.isEmpty()) {
+        if (enquiryIds.isEmpty()) {
             System.out.println("No enquiries found in the system.");
             return;
         }
         
         System.out.println("\n--- Other Projects' Enquiries (View Only) ---");
         boolean hasOtherEnquiries = false;
-        
-        for (int i = 0; i < allEnquiries.size(); i++) {
-            Enquiry enquiry = allEnquiries.get(i);
-            
-            if (managedProjectNames.contains(enquiry.getProjectName())) {
-                continue;
+        for (int i = 0; i < enquiryIds.size(); i++) {
+            String enquiryId = enquiryIds.get(i);
+            String projectName = enquiryController.checkProjectName(enquiryId);
+            if (!projectNames.contains(projectName)) {
+                hasOtherEnquiries = true;
+                displayEnquiry(i, enquiryId, false);
             }
-            
-            hasOtherEnquiries = true;
-            displayEnquiry(i, enquiry, false);
         }
-        
         if (!hasOtherEnquiries) {
             System.out.println("No enquiries from other projects.");
         }
         
         System.out.println("\n--- Your Projects' Enquiries (Can Reply) ---");
         boolean hasOwnEnquiries = false;
-        
-        for (int i = 0; i < allEnquiries.size(); i++) {
-            Enquiry enquiry = allEnquiries.get(i);
-            
-            if (!managedProjectNames.contains(enquiry.getProjectName())) {
-                continue;
+        for (int i = 0; i < enquiryIds.size(); i++) {
+            String enquiryId = enquiryIds.get(i);
+            String projectName = enquiryController.checkProjectName(enquiryId);
+            if (projectNames.contains(projectName)) {
+                hasOwnEnquiries = true;
+                displayEnquiry(i, enquiryId, true);
             }
-            
-            hasOwnEnquiries = true;
-            displayEnquiry(i, enquiry, true);
         }
-        
         if (!hasOwnEnquiries) {
             System.out.println("No enquiries for your projects.");
         }
         
         System.out.println("0. Back");
         
-        int choice;
-        while (true) {
-            System.out.print("\nSelect an enquiry to reply (Enter number) ");
-            choice = getMenuChoice();
-            
-            if (choice == 0) return;
-            
-            if (choice < 1 || choice > allEnquiries.size()) {
-                System.out.println("Invalid selection. Please try again.");
-                continue;
+        int choice = getMenuChoice();
+        if (choice == 0) {
+            return;
+        }
+        if (choice < 1 || choice > enquiryIds.size()) {
+            System.out.println("Invalid selection. Please try again.");
+            return;
+        }
+        
+        String selectedEnquiryId = enquiryIds.get(choice - 1);
+        String selectedProjectName = enquiryController.checkProjectName(selectedEnquiryId);
+        
+        if (!projectNames.contains(selectedProjectName)) {
+            System.out.println("You can only reply to enquiries for projects you manage.");
+            return;
+        }
+        
+        String currentAnswer = enquiryController.checkAnswer(selectedEnquiryId);
+        if (currentAnswer != null) {
+            System.out.println("This enquiry has already been answered.");
+            System.out.println("Current answer: " + currentAnswer);
+            System.out.println("1. Update answer");
+            System.out.println("0. Cancel");
+            int updateDecision = getMenuChoice();
+            if (updateDecision != 1) {
+                return;
             }
-            
-            Enquiry selectedEnquiry = allEnquiries.get(choice - 1);
-            
-            if (!managedProjectNames.contains(selectedEnquiry.getProjectName())) {
-                System.out.println("You can only reply to enquiries for projects you manage.");
-                continue;
-            }
-            
-            if (selectedEnquiry.getAnswer() != null) {
-                System.out.println("This enquiry has already been answered.");
-                System.out.println("Current answer: " + selectedEnquiry.getAnswer());
-                System.out.println("1. Update answer");
-                System.out.println("0. Cancel");
-                int updateDecision = getMenuChoice();
-                if (updateDecision != 1) {
-                    continue;
-                }
-            }
-            
-            System.out.println("\nQuestion: " + selectedEnquiry.getQuestion());
-            System.out.print("Enter your reply: ");
-            String answer = scanner.nextLine();
-            
-            if (enquiryController.replyToEnquiry(selectedEnquiry.getId(), answer)) {
-                System.out.println("Reply submitted successfully.");
-            } else {
-                System.out.println("Failed to submit reply.");
-            }
-            
-            break;
+        }
+        
+        System.out.println("\nQuestion: " + enquiryController.checkQuestion(selectedEnquiryId));
+        System.out.print("Enter your reply: ");
+        String answer = scanner.nextLine();
+        
+        if (enquiryController.replyToEnquiry(selectedEnquiryId, answer)) {
+            System.out.println("Reply submitted successfully.");
+        } else {
+            System.out.println("Failed to submit reply.");
         }
     }
 
     @Override
-    public void displayEnquiry(int index, Enquiry enquiry, boolean canReply) {
-        System.out.println((index + 1) + ". Project: " + enquiry.getProjectName() + 
+    public void displayEnquiry(int index, String enquiryId, boolean canReply) {
+        System.out.println((index + 1) + ". Project: " + enquiryController.checkProjectName(enquiryId) + 
                 (canReply ? " [Can Reply]" : " [View Only]"));
-        System.out.println("   ID: " + enquiry.getId());
-        System.out.println("   Applicant: " + enquiry.getApplicantName());
-        System.out.println("   Question: " + enquiry.getQuestion());
-        System.out.println("   Posted: " + enquiry.getFormattedCreatedDate());
-        if (enquiry.getAnswer() != null) {
-            System.out.println("   Answer: " + enquiry.getAnswer());
-            System.out.println("   Answered: " + enquiry.getFormattedAnsweredDate());
+        System.out.println("   ID: " + enquiryId);
+        System.out.println("   Applicant: " + enquiryController.checkApplicantName(enquiryId));
+        System.out.println("   Question: " + enquiryController.checkQuestion(enquiryId));
+        System.out.println("   Posted: " + enquiryController.checkFormattedCreatedDate(enquiryId));
+        String answer = enquiryController.checkAnswer(enquiryId);
+        if (answer != null) {
+            System.out.println("   Answer: " + answer);
+            System.out.println("   Answered: " + enquiryController.checkFormattedAnsweredDate(enquiryId));
             System.out.println("   Status: Answered");
         } else {
             System.out.println("   Status: Pending response");

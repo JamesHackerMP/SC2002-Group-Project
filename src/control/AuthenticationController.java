@@ -121,6 +121,15 @@ public class AuthenticationController implements UserAuthenticationController,
     }
 
     @Override
+    public HDBOfficer getOfficer(String name) {
+        User user = getUser(name);
+        if (user != null && user instanceof HDBOfficer) {
+            return (HDBOfficer) user;
+        }
+        return null;
+    }
+
+    @Override
     public boolean isValidNric(String nric) {
         return nric != null && NRIC_PATTERN.matcher(nric).matches();
     }

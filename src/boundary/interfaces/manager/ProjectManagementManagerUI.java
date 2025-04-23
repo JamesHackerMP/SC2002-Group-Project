@@ -1,12 +1,10 @@
 package boundary.interfaces.manager;
 
-import entity.HDBManager;
-
 public interface ProjectManagementManagerUI {
-    void manageProjects(HDBManager manager);
-    void createProject(HDBManager manager);
-    void editProject(HDBManager manager);
-    void deleteProject(HDBManager manager);
-    void toggleVisibility(HDBManager manager);
+    void manageProjects(String managerName);
+    void createProject(String managerName);
+    void editProject(String managerName);
+    void deleteProject(String managerName);
+    void toggleVisibility(String managerName);
     void viewAllProjects();
 }

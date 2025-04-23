@@ -84,9 +84,9 @@ public class Main {
         if (authController.getUser(currentUserName) instanceof Applicant) {
             applicantUI.displayMenu(currentUserName);
         } else if (authController.getUser(currentUserName) instanceof HDBOfficer officer) {
-            officerUI.displayMenu(officer);
+            officerUI.displayMenu(officer.getName());
         } else if (authController.getUser(currentUserName) instanceof HDBManager manager) {
-            managerUI.displayMenu(manager);
+            managerUI.displayMenu(manager.getName());
         }
     }
 

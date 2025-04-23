@@ -2,7 +2,7 @@ package boundary;
 
 import boundary.interfaces.officer.*;
 import control.*;
-import entity.*;
+import java.time.LocalDate;
 import java.util.*;
 
 public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI, 
@@ -31,7 +31,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
     }
 
     @Override
-    public void displayMenu(HDBOfficer officer) {
+    public void displayMenu(String officerName) {
         while (true) {
             System.out.println("\n=== HDB Officer Menu ===");
             System.out.println("1. Register for Project");
@@ -43,11 +43,11 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
 
             int choice = getMenuChoice();
             switch (choice) {
-                case 1 -> registerForProject(officer);
-                case 2 -> viewMyProject(officer);
-                case 3 -> processFlatBooking(officer);
-                case 4 -> generateBookingReceipt(officer);
-                case 5 -> manageEnquiries(officer);
+                case 1 -> registerForProject(officerName);
+                case 2 -> viewMyProject(officerName);
+                case 3 -> processFlatBooking(officerName);
+                case 4 -> generateBookingReceipt(officerName);
+                case 5 -> manageEnquiries(officerName);
                 case 0 -> {return;}
                 default -> System.out.println("Invalid choice. Please try again.");
             }
@@ -55,21 +55,21 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
     }
 
     @Override
-    public void registerForProject(HDBOfficer officer) {
+    public void registerForProject(String officerName) {
         System.out.println("\n=== Available Projects for Registration ===");
-        List<Project> projects = projectController.getAllProjects();
+        List<String> projectNames = projectController.getAllProjects();
 
-        if (projects.isEmpty()) {
+        if (projectNames.isEmpty()) {
             System.out.println("No projects available for registration.");
             return;
         }
 
-        for (int i = 0; i < projects.size(); i++) {
-            Project project = projects.get(i);
+        for (int i = 0; i < projectNames.size(); i++) {
+            String projectName = projectNames.get(i);
             System.out.printf("%d. %s (Neighborhood: %s, Slots: %d/%d, Application Period: %s to %s)%n",
-                    i + 1, project.getName(), project.getNeighborhood(),
-                    project.getOfficers().size(), project.getOfficerSlots(),
-                    project.getOpeningDate(), project.getClosingDate());
+                    i + 1, projectName, projectController.checkNeighborhood(projectName),
+                    projectController.checkOfficers(projectName).size(), projectController.checkOfficerSlots(projectName),
+                    projectController.checkOpeningDate(projectName), projectController.checkClosingDate(projectName));
         }
         System.out.println("0. Cancel");
 
@@ -78,18 +78,18 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
 
         if (choice == 0) return;
 
-        if (choice < 1 || choice > projects.size()) {
+        if (choice < 1 || choice > projectNames.size()) {
             System.out.println("Invalid choice.");
             return;
         }
 
-        Project selectedProject = projects.get(choice - 1);
-        if (officerController.registerForProject(officer, selectedProject.getName())) {
+        String selectedProjectName = projectNames.get(choice - 1);
+        if (officerController.registerForProject(authController.getOfficer(officerName), selectedProjectName)) {
 
             applicationController.getAllApplications().removeIf(app -> 
-            app.getApplicantName().equals(officer.getName()) && 
-            app.getStatus() == Application.Status.UNSUCCESSFUL);
-
+            app.equals(officerName) && 
+            applicationController.isStatusUnsuccessful(app));
+            
             System.out.println("Registration submitted for approval.");
         } else {
             System.out.println("Registration failed. You may be ineligible.");
@@ -97,101 +97,113 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
     }
 
     @Override
-    public void viewMyProject(HDBOfficer officer) {
-        List<Project> assignedProjects = projectController.getProjectsByOfficer(officer.getName());
-    
-        List<Project> pendingProjects = projectController.getAllProjects().stream()
-                .filter(project -> project.getPendingOfficers().contains(officer.getName()))
+    public void viewMyProject(String officerName) {
+        List<String> assignedProjectNames = projectController.getProjectsByOfficer(officerName);
+        List<String> pendingProjectNames = projectController.getAllProjects().stream()
+                .filter(project -> projectController.checkPendingOfficers(project).contains(officerName))
                 .toList();
     
-        if ((assignedProjects == null || assignedProjects.isEmpty()) && pendingProjects.isEmpty()) {
+        if ((assignedProjectNames == null || assignedProjectNames.isEmpty()) && pendingProjectNames.isEmpty()) {
             System.out.println("You are not assigned to any project, and you have no pending registrations.");
             return;
         }
     
-        if (assignedProjects != null && !assignedProjects.isEmpty()) {
+        if (assignedProjectNames != null && !assignedProjectNames.isEmpty()) {
             System.out.println("\n=== Assigned Projects ===");
-            Filter filter = filterController.getFilter();
+            
             System.out.println("Current Filters:");
-            if (filter.getNeighborhood() != null) {
-                System.out.println("Neighborhood: " + filter.getNeighborhood());
+            String neighborhood = filterController.checkNeighborhood();
+            if (neighborhood != null) {
+                System.out.println("Neighborhood: " + neighborhood);
             }
-            if (filter.getFlatTypes() != null && !filter.getFlatTypes().isEmpty()) {
-                System.out.println("Flat Types: " + filter.getFlatTypes());
+            
+            List<String> flatTypes = filterController.checkFlatTypes();
+            if (flatTypes != null && !flatTypes.isEmpty()) {
+                System.out.println("Flat Types: " + flatTypes);
             }
-            if (filter.getOpeningAfter() != null) {
-                System.out.println("Opening After: " + filter.getOpeningAfter());
+            
+            LocalDate openingAfter = filterController.checkOpeningAfter();
+            if (openingAfter != null) {
+                System.out.println("Opening After: " + openingAfter);
             }
-            if (filter.getClosingBefore() != null) {
-                System.out.println("Closing Before: " + filter.getClosingBefore());
+            
+            LocalDate closingBefore = filterController.checkClosingBefore();
+            if (closingBefore != null) {
+                System.out.println("Closing Before: " + closingBefore);
             }
-            if (filter.getManager() != null) {
-                System.out.println("Manager: " + filter.getManager());
+            
+            String manager = filterController.checkManager();
+            if (manager != null) {
+                System.out.println("Manager: " + manager);
             }
-            if (filter.getOfficer() != null) {
-                System.out.println("Officer: " + filter.getOfficer());
+            
+            String filterOfficer = filterController.checkOfficer();
+            if (filterOfficer != null) {
+                System.out.println("Officer: " + filterOfficer);
             }
         
-            List<String> allProjects = filterController.applyFilters(assignedProjects);
+            List<String> filteredProjects = filterController.applyFilters(assignedProjectNames);
         
-            if (allProjects.isEmpty()) {
+            if (filteredProjects.isEmpty()) {
                 System.out.println("No projects available with the current filters.");
                 return;
             }
             
-            for (Project project : assignedProjects) {
-                System.out.println("\nProject Name: " + project.getName());
-                System.out.println("Neighborhood: " + project.getNeighborhood());
-                System.out.println("2-Room Units Available: " + project.getTwoRoomUnits());
-                System.out.println("2-Room Price: " + project.getTwoRoomPrice());
-                System.out.println("3-Room Units Available: " + project.getThreeRoomUnits());
-                System.out.println("3-Room Price: " + project.getThreeRoomPrice());
-                System.out.println("Application Period: " + project.getOpeningDate() + " to " + project.getClosingDate());
-                System.out.println("Manager: " + project.getManager());
+            for (String projectName : assignedProjectNames) {
+                System.out.println("\nProject Name: " + projectName);
+                System.out.println("Neighborhood: " + projectController.checkNeighborhood(projectName));
+                System.out.println("2-Room Units Available: " + projectController.checkTwoRoomUnits(projectName));
+                System.out.println("2-Room Price: " + projectController.checkTwoRoomPrice(projectName));
+                System.out.println("3-Room Units Available: " + projectController.checkThreeRoomUnits(projectName));
+                System.out.println("3-Room Price: " + projectController.checkThreeRoomPrice(projectName));
+                System.out.println("Application Period: " + projectController.checkOpeningDate(projectName) + 
+                                " to " + projectController.checkClosingDate(projectName));
+                System.out.println("Manager: " + projectController.checkManager(projectName));
             }
         }
     
-        if (!pendingProjects.isEmpty()) {
+        if (!pendingProjectNames.isEmpty()) {
             System.out.println("\n=== Pending Registrations ===");
-            for (Project project : pendingProjects) {
-                System.out.println("\nProject Name: " + project.getName());
-                System.out.println("Neighborhood: " + project.getNeighborhood());
-                System.out.println("Application Period: " + project.getOpeningDate() + " to " + project.getClosingDate());
-                System.out.println("Manager: " + project.getManager());
+            for (String projectName : pendingProjectNames) {
+                System.out.println("\nProject Name: " + projectName);
+                System.out.println("Neighborhood: " + projectController.checkNeighborhood(projectName));
+                System.out.println("Application Period: " + projectController.checkOpeningDate(projectName) + 
+                                " to " + projectController.checkClosingDate(projectName));
+                System.out.println("Manager: " + projectController.checkManager(projectName));
                 System.out.println("Status: Pending Approval");
             }
         }
     }
 
     @Override
-    public void processFlatBooking(HDBOfficer officer) {
-        Project currentProject = projectController.getCurrentProjectByOfficer(officer.getName());
-        if (currentProject == null) {
+    public void processFlatBooking(String officerName) {
+        String currentProjectName = projectController.getCurrentProjectByOfficer(officerName);
+        if (currentProjectName == null) {
             System.out.println("You are not assigned to any project that opens for applying.");
             return;
         }
 
-        List<Application> applications = applicationController.getAllApplications();
-        List<Application> projectApplications = new ArrayList<>();
+        List<String> applications = applicationController.getAllApplications();
+        List<String> applicantNames = new ArrayList<>();
 
-        for (Application application : applications) {
-            if (application.getProjectName().equals(currentProject.getName()) &&
-                application.getStatus() == Application.Status.SUCCESSFUL) {
-                projectApplications.add(application);
+        for (String application : applications) {
+            if (applicationController.checkProjectName(application).equals(currentProjectName) &&
+                applicationController.isStatusSuccessful(application)) {
+                    applicantNames.add(application);
             }
         }
 
-        if (projectApplications.isEmpty()) {
+        if (applicantNames.isEmpty()) {
             System.out.println("No successful applications found for this project.");
             return;
         }
 
         System.out.println("\n=== Successful Application ===");
-        for (int i = 0; i < projectApplications.size(); i++) {
-            Application application = projectApplications.get(i);
-            System.out.printf("%d. %s%n", i + 1, application.getApplicantName());
-            System.out.println("NRIC: " + authController.getUser(application.getApplicantName()).getNric());
-            System.out.println("Flat Type Apply: " + application.getFlatTypeApply());
+        for (int i = 0; i < applicantNames.size(); i++) {
+            String applicantName = applicantNames.get(i);
+            System.out.printf("%d. %s%n", i + 1, applicantName);
+            System.out.println("NRIC: " + authController.checkNric(applicantName));
+            System.out.println("Flat Type Apply: " + applicationController.checkFlatTypeApply(applicantName));
         }
         System.out.println("0. Cancel");
 
@@ -200,17 +212,17 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
 
         if (choice == 0) return;
 
-        if (choice < 1 || choice > projectApplications.size()) {
+        if (choice < 1 || choice > applicantNames.size()) {
             System.out.println("Invalid choice.");
             return;
         }
 
-        Application selectedApplication = projectApplications.get(choice - 1);
-        User applicant = authController.getUser(selectedApplication.getApplicantName());
+        String selectedApplicantName = applicantNames.get(choice - 1);
+        String maritalStatus = authController.checkMaritalStatus(selectedApplicantName);
         String flatType;
 
         System.out.println("\nAvailable Flat Types:");
-        if (applicant.getMaritalStatus().equals("Single")) {
+        if ("Single".equals(maritalStatus)) {
             System.out.println("1. 2-Room");
             System.out.println("0. Cancel");
             
@@ -229,8 +241,8 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
                 }
             }
         } else {
-            boolean hasTwoRoom = currentProject.getTwoRoomUnits() > 0;
-            boolean hasThreeRoom = currentProject.getThreeRoomUnits() > 0;
+            boolean hasTwoRoom = projectController.checkTwoRoomUnits(currentProjectName) > 0;
+            boolean hasThreeRoom = projectController.checkThreeRoomUnits(currentProjectName) > 0;
             
             if (hasTwoRoom && hasThreeRoom) {
                 System.out.println("1. 2-Room");
@@ -274,8 +286,9 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
                 }
             }
         }
+
         System.out.println("\nAre you sure you want to book a " + flatType + " flat for " 
-        + selectedApplication.getApplicantName() + "?");
+        + selectedApplicantName + "?");
         System.out.println("This action finalizes the booking.");
         System.out.println("1. Yes, confirm booking");
         System.out.println("0. No, cancel");
@@ -286,7 +299,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
             return;
         }
 
-        if (applicationController.bookFlat(selectedApplication.getApplicantName(), flatType, officer.getName())) {
+        if (applicationController.bookFlat(selectedApplicantName, flatType, officerName)) {
             System.out.println("Flat booked successfully!");
         } else {
             System.out.println("Failed to book flat. Please check availability.");
@@ -294,93 +307,95 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
     }
 
     @Override
-    public void generateBookingReceipt(HDBOfficer officer) {
-        List<Project> assignedProjects = projectController.getProjectsByOfficer(officer.getName());
-    
-        if ((assignedProjects == null || assignedProjects.isEmpty())) {
+    public void generateBookingReceipt(String officerName) {
+        List<String> assignedProjectNames = projectController.getProjectsByOfficer(officerName);
+
+        if (assignedProjectNames == null || assignedProjectNames.isEmpty()) {
             System.out.println("You are not assigned to any project.");
             return;
         }
 
-        List<Application> applications = applicationController.getAllApplications();
-        List<Application> bookedApplications = new ArrayList<>();
+        List<String> applications = applicationController.getAllApplications();
+        List<String> bookedApplicantNames = new ArrayList<>();
         
-        if (!assignedProjects.isEmpty()) {
-            for (Application application : applications) {
-                for (Project project : assignedProjects) {
-                    if (application.getProjectName().equals(project.getName()) && 
-                        application.getStatus() == Application.Status.BOOKED) {
-                        bookedApplications.add(application);
+        if (!assignedProjectNames.isEmpty()) {
+            for (String application : applications) {
+                for (String projectName : assignedProjectNames) {
+                    if (applicationController.checkProjectName(application).equals(projectName) && 
+                        applicationController.isStatusBooked(application)) {
+                            bookedApplicantNames.add(application);
                         break;
                     }
                 }
             }
         }
         
-        if (bookedApplications.isEmpty()) {
+        if (bookedApplicantNames.isEmpty()) {
             System.out.println("No completed bookings found for your assigned projects.");
             return;
         }
 
         System.out.println("\n=== Completed Bookings ===");
-        for (int i = 0; i < bookedApplications.size(); i++) {
-            Application application = bookedApplications.get(i);
-            System.out.printf("%d. %s%n", i + 1, application.getApplicantName());
+        for (int i = 0; i < bookedApplicantNames.size(); i++) {
+            String applicantName = bookedApplicantNames.get(i);
+            System.out.printf("%d. %s%n", i + 1, applicantName);
         }
         System.out.println("0. Cancel");
-    
+
         System.out.print("\nSelect a booking to generate receipt (Enter number) ");
         int choice = getMenuChoice();
 
         if (choice == 0) return;
 
-        if (choice < 1 || choice > bookedApplications.size()) {
+        if (choice < 1 || choice > bookedApplicantNames.size()) {
             System.out.println("Invalid choice.");
             return;
         }
 
-        Application selectedApplication = bookedApplications.get(choice - 1);
-        Project project = projectController.getProject(selectedApplication.getProjectName());
-        User applicant = authController.getUser(selectedApplication.getApplicantName());
+        String selectedApplicantName = bookedApplicantNames.get(choice - 1);
+        String projectName = applicationController.checkProjectName(selectedApplicantName);
+        
         System.out.println("\n=== Booking Receipt ===");
-        System.out.println("Applicant Name: " + applicant.getName());
-        System.out.println("Nric: " + applicant.getNric());
-        System.out.println("Age: " + applicant.getAge());
-        System.out.println("Marital Status: " + applicant.getMaritalStatus());
-        System.out.println("Project: " + project.getName());
-        System.out.println("Neighborhood: " + project.getNeighborhood());
-        System.out.println("Flat Type: " + selectedApplication.getFlatType());
-        System.out.println("Price: " + selectedApplication.getPrice());
+        System.out.println("Applicant Name: " + selectedApplicantName);
+        System.out.println("Nric: " + authController.checkNric(selectedApplicantName));
+        System.out.println("Age: " + authController.checkAge(selectedApplicantName));
+        System.out.println("Marital Status: " + authController.checkMaritalStatus(selectedApplicantName));
+        System.out.println("Project: " + projectName);
+        System.out.println("Neighborhood: " + projectController.checkNeighborhood(projectName));
+        System.out.println("Flat Type: " + applicationController.checkFlatType(selectedApplicantName));
+        System.out.println("Price: " + applicationController.checkPrice(selectedApplicantName));
         System.out.println("Booking Date: " + java.time.LocalDate.now());
         System.out.println("\nThank you for choosing HDB!");
     }
 
     @Override
-    public void manageEnquiries(HDBOfficer officer) {
-        Project currentProject = projectController.getCurrentProjectByOfficer(officer.getName());
-        if (currentProject == null) {
-            System.out.println("You are not assigned to any project that opens for applying that opens for applying.");
+    public void manageEnquiries(String officerName) {
+        String currentProjectName = projectController.getCurrentProjectByOfficer(officerName);
+        if (currentProjectName == null) {
+            System.out.println("You are not assigned to any project that opens for applying.");
             return;
         }
+        
+        List<String> enquiryIds = enquiryController.getEnquiriesByProject(currentProjectName);
 
-        List<Enquiry> enquiries = enquiryController.getEnquiriesByProject(currentProject.getName());
-
-        if (enquiries.isEmpty()) {
+        if (enquiryIds.isEmpty()) {
             System.out.println("No enquiries found for this project.");
             return;
         }
 
-        System.out.println("\n=== Enquiries for " + projectController.getCurrentProjectByOfficer(officer.getName()) + " ===");
-        for (int i = 0; i < enquiries.size(); i++) {
-            Enquiry enquiry = enquiries.get(i);
-            System.out.println((i + 1) + ". ID: " + enquiry.getId());
-            System.out.println("   Project: " + enquiry.getProjectName());
-            System.out.println("   Applicant: " + enquiry.getApplicantName());
-            System.out.println("   Question: " + enquiry.getQuestion());
-            System.out.println("   Posted: " + enquiry.getFormattedCreatedDate());
-            if (enquiry.getAnswer() != null) {
-                System.out.println("   Answer: " + enquiry.getAnswer());
-                System.out.println("   Answered: " + enquiry.getFormattedAnsweredDate());
+        System.out.println("\n=== Enquiries for " + currentProjectName + " ===");
+        for (int i = 0; i < enquiryIds.size(); i++) {
+            String enquiryId = enquiryIds.get(i);
+            System.out.println((i + 1) + ". ID: " + enquiryId);
+            System.out.println("   Project: " + enquiryController.checkProjectName(enquiryId));
+            System.out.println("   Applicant: " + enquiryController.checkApplicantName(enquiryId));
+            System.out.println("   Question: " + enquiryController.checkQuestion(enquiryId));
+            System.out.println("   Posted: " + enquiryController.checkFormattedCreatedDate(enquiryId));
+            
+            String answer = enquiryController.checkAnswer(enquiryId);
+            if (answer != null) {
+                System.out.println("   Answer: " + answer);
+                System.out.println("   Answered: " + enquiryController.checkFormattedAnsweredDate(enquiryId));
             } else {
                 System.out.println("   Status: Pending response");
             }
@@ -394,19 +409,19 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
             
             if (choice == 0) return;
             
-            if (choice < 0 || choice > enquiries.size()) {
+            if (choice < 0 || choice > enquiryIds.size()) {
                 System.out.println("Invalid selection. Please try again.");
-            } else if (choice >= 1 && choice <= enquiries.size()) {
+            } else if (choice >= 1 && choice <= enquiryIds.size()) {
                 break;
             }
         }
-    
-        Enquiry selectedEnquiry = enquiries.get(choice - 1);
-        System.out.println("\nQuestion: " + selectedEnquiry.getQuestion());
+
+        String selectedEnquiryId = enquiryIds.get(choice - 1);
+        System.out.println("\nQuestion: " + enquiryController.checkQuestion(selectedEnquiryId));
         System.out.print("Enter your reply: ");
         String answer = scanner.nextLine();
-    
-        if (enquiryController.replyToEnquiry(selectedEnquiry.getId(), answer)) {
+
+        if (enquiryController.replyToEnquiry(selectedEnquiryId, answer)) {
             System.out.println("Reply submitted successfully.");
         } else {
             System.out.println("Failed to submit reply.");

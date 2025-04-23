@@ -139,8 +139,12 @@ public class ApplicationController implements ApplicationEligibilityController,
     }
 
     @Override
-    public List<Application> getAllApplications() {
-        return new ArrayList<>(applications.values());
+    public List<String> getAllApplications() {
+        List<String> applicantNames = new ArrayList<>();
+        for (Application application : applications.values()) {
+            applicantNames.add(application.getApplicantName());
+        }
+        return applicantNames;
     }
 
     @Override

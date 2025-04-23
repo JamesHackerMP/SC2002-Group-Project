@@ -1,8 +1,6 @@
 package boundary.interfaces.officer;
 
-import entity.HDBOfficer;
-
 public interface BookingManagementUI {
-    void processFlatBooking(HDBOfficer officer);
-    void generateBookingReceipt(HDBOfficer officer);
+    void processFlatBooking(String officerName);
+    void generateBookingReceipt(String officerName);
 }

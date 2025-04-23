@@ -2,10 +2,11 @@ package control;
 
 import control.interfaces.manager.*;
 import entity.Application;
-import entity.HDBManager;
 import entity.Project;
 import entity.Report;
 import entity.User;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,36 +18,13 @@ public class ManagerController implements ProjectManagementManagerController,
     private final ApplicationController applicationController;
     private final OfficerController officerController;
     private final AuthenticationController authController;
+    private Report currentReport;
 
     public ManagerController(ProjectController projectController, ApplicationController applicationController, OfficerController officerController, AuthenticationController authController) {
         this.projectController = projectController;
         this.applicationController = applicationController;
         this.officerController = officerController;
         this.authController = authController;
-    }
-
-    @Override
-    public boolean createProject(HDBManager manager, Project project) {
-        if (manager == null || project == null) {
-            return false;
-        }
-        
-        List<String> projectNames = projectController.getProjectsByManager(manager.getName());
-        List<Project> currentProjects = new ArrayList<>();
-        for (String name : projectNames) {
-            Project currentProject = projectController.getProject(name);
-            if (currentProject != null) {
-                currentProjects.add(currentProject);
-            }
-        }
-        for (Project p : currentProjects) {
-            if (isOverlappingPeriod(p, project)) {
-                return false;
-            }
-        }
-    
-        project.setManager(manager.getName());
-        return projectController.createProject(project);
     }
 
     public List<String> getPendingOfficers(Project project) {
@@ -63,11 +41,6 @@ public class ManagerController implements ProjectManagementManagerController,
         return officerController.rejectOfficerRegistration(officerName, projectName);
     }
 
-    private boolean isOverlappingPeriod(Project p1, Project p2) {
-        return !p1.getClosingDate().isBefore(p2.getOpeningDate()) &&
-                !p2.getClosingDate().isBefore(p1.getOpeningDate());
-    }
-
     @Override
     public void toggleProjectVisibility(String projectName, boolean visible) {
         Project project = projectController.getProject(projectName);
@@ -75,9 +48,16 @@ public class ManagerController implements ProjectManagementManagerController,
     }
 
     @Override
-    public Report generateApplicationsReport(Map<String, String> filters) {
+    public Report generateReport(Map<String, String> filters) {
         List<String[]> reportData = new ArrayList<>();
-        List<Application> applications = applicationController.getAllApplications();
+        List<String> applicantNames = applicationController.getAllApplications();
+        List<Application> applications = new ArrayList<>();
+        for (String applicantName : applicantNames) {
+            Application app = applicationController.getApplication(applicantName);
+            if (app != null) {
+                applications.add(app);
+            }
+        }
 
         for (Application app : applications) {
             boolean include = true;
@@ -141,6 +121,38 @@ public class ManagerController implements ProjectManagementManagerController,
             }
         }
 
-        return new Report("REP" + System.currentTimeMillis(), "Applications", filters, reportData);
+        currentReport = new Report("REP" + System.currentTimeMillis(), "Applications", filters, reportData);
+        return currentReport;
+    }
+
+    @Override
+    public boolean generateApplicationsReport(Map<String, String> filters) {
+        this.currentReport = generateReport(filters);
+        return this.currentReport != null;
+    }
+
+    @Override
+    public String getReportId() {
+        return currentReport != null ? currentReport.getReportId() : "";
+    }
+    
+    @Override
+    public String getReportTitle() {
+        return currentReport != null ? currentReport.getTitle() : "";
+    }
+    
+    @Override
+    public LocalDateTime getReportGeneratedDate() {
+        return currentReport != null ? currentReport.getGeneratedDate() : null;
+    }
+    
+    @Override
+    public List<String[]> getReportData() {
+        return currentReport != null ? currentReport.getData() : new ArrayList<>();
+    }
+    
+    @Override
+    public boolean hasReportData() {
+        return currentReport != null && !currentReport.getData().isEmpty();
     }
 }

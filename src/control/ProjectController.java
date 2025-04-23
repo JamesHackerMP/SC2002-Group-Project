@@ -92,7 +92,12 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
     }
 
     @Override
-    public boolean createProject(Project project) {
+    public boolean createProject(String name, String neighborhood, int twoRoomUnits, int twoRoomPrice,
+    int threeRoomUnits, int threeRoomPrice, LocalDate openingDate,
+    LocalDate closingDate, String manager, int officerSlots) {
+        Project project = new Project(name, neighborhood, twoRoomUnits, twoRoomPrice,
+                threeRoomUnits, threeRoomPrice, openingDate,
+                closingDate, manager, officerSlots);
         projects.put(project.getName(), project);
         return saveProjects();
     }
@@ -242,6 +247,21 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
     @Override
     public List<String> checkPendingOfficers(String projectName) {
         return getProject(projectName).getPendingOfficers();
+    }
+
+    @Override
+    public void updateNeighborhood(String projectName, String neighborhood) {
+        getProject(projectName).setNeighborhood(neighborhood);
+    }
+
+    @Override
+    public void updateTwoRoomUnits(String projectName, int twoRoomUnits) {
+        getProject(projectName).setTwoRoomUnits(twoRoomUnits);
+    }
+
+    @Override
+    public void updateThreeRoomUnits(String projectName, int threeRoomUnits) {
+        getProject(projectName).setTwoRoomUnits(threeRoomUnits);
     }
 
     @Override

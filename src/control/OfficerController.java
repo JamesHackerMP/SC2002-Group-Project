@@ -55,8 +55,8 @@ public class OfficerController implements OfficerRegistrationController, Officer
         }
         if (applicationController.getAllApplications().stream()
             .anyMatch(application -> 
-                application.getApplicantName().equals(officerName) &&
-                application.getProjectName().equals(projectName))) {
+                application.equals(officerName) &&
+                applicationController.checkProjectName(application).equals(projectName))) {
                 return false;}
         project.addOfficer(officerName);
         projectController.saveProjects();

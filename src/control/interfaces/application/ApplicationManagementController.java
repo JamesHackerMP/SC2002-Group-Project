@@ -17,7 +17,7 @@ public interface ApplicationManagementController {
     Status checkStatus(String applicantName);
     String checkFlatType(String applicantName);
     int checkPrice(String applicantName);
-    List<Application> getAllApplications();
+    List<String> getAllApplications();
     boolean isStatusPending(String applicantName);
     boolean isStatusSuccessful(String applicantName);
     boolean isStatusUnsuccessful(String applicantName);
