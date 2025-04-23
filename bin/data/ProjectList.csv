@@ -1,4 +1,4 @@
 Project Name,Neighborhood,Type 1,Number of units for Type 1,Selling price for Type 1,Type 2,Number of units for Type 2,Selling price for Type 2,Application opening date,Application closing date,Manager,Officer Slot,Officer
 Pineapple House,Bikini Bottom,2-Room,3,200000,3-Room,1,300000,2025/04/01,2025/05/01,Martha,5,
-Krusty Krab,Bikini Bottom,,,,3-Room,3,500000,2025/04/01,2025/05/01,Martha,2,Olive
 Mickey Mouse Clubhouse,Disneyland,2-Room,1,100000,3-Room,2,450000,2025/04/01,2025/05/01,Mark,3,Ozzy
+Krusty Krab,Bikini Bottom,2-Room,,,,,,2025/04/01,2025/05/01,Matthew,2,Olive;Oswald

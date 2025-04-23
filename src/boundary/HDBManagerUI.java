@@ -201,7 +201,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                     projectController.checkTwoRoomUnits(projectName), projectController.checkThreeRoomUnits(projectName));
         }
         System.out.println("0. Cancel");
-    
+
         int projectChoice = getMenuChoice();
         if (projectChoice == 0) {
             System.out.println("Edit canceled.");
@@ -211,17 +211,18 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             System.out.println("Invalid selection. Please try again.");
             return;
         }
-    
+
         String selectedProjectName = projectNames.get(projectChoice - 1);
-    
+
         System.out.println("\n=== Editing Project: " + selectedProjectName + " ===");
+        
         System.out.println("Current Neighborhood: " + projectController.checkNeighborhood(selectedProjectName));
         System.out.print("Enter new neighborhood (or press Enter to keep current): ");
         String newNeighborhood = scanner.nextLine();
         if (!newNeighborhood.isBlank()) {
             projectController.updateNeighborhood(selectedProjectName, newNeighborhood);
         }
-    
+
         System.out.println("Current 2-Room Units: " + projectController.checkTwoRoomUnits(selectedProjectName));
         System.out.print("Enter new number of 2-Room Units (or press Enter to keep current): ");
         String newTwoRoomUnits = scanner.nextLine();
@@ -232,7 +233,18 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                 System.out.println("Invalid input. Keeping current value.");
             }
         }
-    
+
+        System.out.println("Current 2-Room Price: " + projectController.checkTwoRoomPrice(selectedProjectName));
+        System.out.print("Enter new 2-Room Price (or press Enter to keep current): ");
+        String newTwoRoomPrice = scanner.nextLine();
+        if (!newTwoRoomPrice.isBlank()) {
+            try {
+                projectController.updateTwoRoomPrice(selectedProjectName, Integer.parseInt(newTwoRoomPrice));
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Keeping current value.");
+            }
+        }
+
         System.out.println("Current 3-Room Units: " + projectController.checkThreeRoomUnits(selectedProjectName));
         System.out.print("Enter new number of 3-Room Units (or press Enter to keep current): ");
         String newThreeRoomUnits = scanner.nextLine();
@@ -243,7 +255,55 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
                 System.out.println("Invalid input. Keeping current value.");
             }
         }
-    
+        
+        System.out.println("Current 3-Room Price: " + projectController.checkThreeRoomPrice(selectedProjectName));
+        System.out.print("Enter new 3-Room Price (or press Enter to keep current): ");
+        String newThreeRoomPrice = scanner.nextLine();
+        if (!newThreeRoomPrice.isBlank()) {
+            try {
+                projectController.updateThreeRoomPrice(selectedProjectName, Integer.parseInt(newThreeRoomPrice));
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Keeping current value.");
+            }
+        }
+        
+        System.out.println("Current Opening Date: " + projectController.checkOpeningDate(selectedProjectName));
+        System.out.print("Enter new Opening Date (yyyy/MM/dd) (or press Enter to keep current): ");
+        String newOpeningDate = scanner.nextLine();
+        if (!newOpeningDate.isBlank()) {
+            try {
+                LocalDate date = LocalDate.parse(newOpeningDate, DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+                projectController.updateOpeningDate(selectedProjectName, date);
+            } catch (Exception e) {
+                System.out.println("Invalid date format. Keeping current value.");
+            }
+        }
+        
+        System.out.println("Current Closing Date: " + projectController.checkClosingDate(selectedProjectName));
+        System.out.print("Enter new Closing Date (yyyy/MM/dd) (or press Enter to keep current): ");
+        String newClosingDate = scanner.nextLine();
+        if (!newClosingDate.isBlank()) {
+            try {
+                LocalDate date = LocalDate.parse(newClosingDate, DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+                projectController.updateClosingDate(selectedProjectName, date);
+            } catch (Exception e) {
+                System.out.println("Invalid date format. Keeping current value.");
+            }
+        }
+        
+        System.out.println("Current Officer Slots: " + projectController.checkOfficerSlots(selectedProjectName));
+        System.out.print("Enter new number of Officer Slots (max 10) (or press Enter to keep current): ");
+        String newOfficerSlots = scanner.nextLine();
+        if (!newOfficerSlots.isBlank()) {
+            try {
+                int slots = Integer.parseInt(newOfficerSlots);
+                slots = Math.min(slots, 10);
+                projectController.updateOfficerSlots(selectedProjectName, slots);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Keeping current value.");
+            }
+        }
+
         System.out.println("Project updated successfully.");
     }
 
@@ -351,7 +411,7 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
         for (String projectName : projectNames) {
             System.out.println("\nProject Name: " + projectName);
             System.out.println("Neighborhood: " + projectController.checkNeighborhood(projectName));
-            System.out.println("2-Room Units Available: " + projectController.checkTwoRoomUnits(projectName));
+            System.out.println("2-Room Units: " + projectController.checkTwoRoomUnits(projectName));
             System.out.println("2-Room Price: " + projectController.checkTwoRoomPrice(projectName));
             System.out.println("3-Room Units: " + projectController.checkThreeRoomUnits(projectName));
             System.out.println("3-Room Price: " + projectController.checkThreeRoomPrice(projectName));

@@ -152,9 +152,9 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
             for (String projectName : assignedProjectNames) {
                 System.out.println("\nProject Name: " + projectName);
                 System.out.println("Neighborhood: " + projectController.checkNeighborhood(projectName));
-                System.out.println("2-Room Units Available: " + projectController.checkTwoRoomUnits(projectName));
+                System.out.println("2-Room Units: " + projectController.checkTwoRoomUnits(projectName));
                 System.out.println("2-Room Price: " + projectController.checkTwoRoomPrice(projectName));
-                System.out.println("3-Room Units Available: " + projectController.checkThreeRoomUnits(projectName));
+                System.out.println("3-Room Units: " + projectController.checkThreeRoomUnits(projectName));
                 System.out.println("3-Room Price: " + projectController.checkThreeRoomPrice(projectName));
                 System.out.println("Application Period: " + projectController.checkOpeningDate(projectName) + 
                                 " to " + projectController.checkClosingDate(projectName));

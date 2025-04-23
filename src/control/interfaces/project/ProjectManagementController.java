@@ -30,5 +30,11 @@ public interface ProjectManagementController {
     List<String> checkPendingOfficers(String projectName);
     void updateNeighborhood(String projectName, String neighborhood);   
     void updateTwoRoomUnits(String projectName, int twoRoomUnits);
-    void updateThreeRoomUnits(String projectName, int threeRoomUnits);
+    void updateThreeRoomUnits(String projectName, int threeRoomUnits); 
+    void updateTwoRoomPrice(String projectName, int twoRoomPrice);
+    void updateThreeRoomPrice(String projectName, int threeRoomPrice);
+    void updateOpeningDate(String projectName, LocalDate openingDate);
+    void updateClosingDate(String projectName, LocalDate closingDate);
+    void updateOfficerSlots(String projectName, int officerSlots);
 }
+

@@ -252,16 +252,50 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
     @Override
     public void updateNeighborhood(String projectName, String neighborhood) {
         getProject(projectName).setNeighborhood(neighborhood);
+        saveProjects();
     }
+
 
     @Override
     public void updateTwoRoomUnits(String projectName, int twoRoomUnits) {
         getProject(projectName).setTwoRoomUnits(twoRoomUnits);
+        saveProjects();
     }
 
     @Override
     public void updateThreeRoomUnits(String projectName, int threeRoomUnits) {
-        getProject(projectName).setTwoRoomUnits(threeRoomUnits);
+        getProject(projectName).setThreeRoomUnits(threeRoomUnits);
+        saveProjects();
+    }
+
+    @Override
+    public void updateTwoRoomPrice(String projectName, int twoRoomPrice) {
+        getProject(projectName).setTwoRoomPrice(twoRoomPrice);
+        saveProjects();
+    }
+
+    @Override
+    public void updateThreeRoomPrice(String projectName, int threeRoomPrice) {
+        getProject(projectName).setThreeRoomPrice(threeRoomPrice);
+        saveProjects();
+    }
+
+    @Override
+    public void updateOpeningDate(String projectName, LocalDate openingDate) {
+        getProject(projectName).setOpeningDate(openingDate);
+        saveProjects();
+    }
+
+    @Override
+    public void updateClosingDate(String projectName, LocalDate closingDate) {
+        getProject(projectName).setClosingDate(closingDate);
+        saveProjects();
+    }
+
+    @Override
+    public void updateOfficerSlots(String projectName, int officerSlots) {
+        getProject(projectName).setOfficerSlots(officerSlots);
+        saveProjects();
     }
 
     @Override
