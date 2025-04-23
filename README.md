@@ -20,7 +20,7 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 - Flat booking management
 - Persistent in-session filters and system-wide validation
 
-### 🌟 Optional Features
+### 🌟 Additional Features
 - Notification system for user actions
 - Persistent filter settings across menus
 
@@ -87,8 +87,9 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 |-------------------------------|------------|
 | Yeo Yu Xuan Dazzel            | U2423800E  |
 | Mohamed Fahath Mohammed Adhil | U2423664G  |
-| (Add others here)             | (ID)       | 
-
+| Zhang Yuhe                    | U2422060C  | 
+| Ng Zheng Da                   | U2322077H  | 
+| Huang Yitian                  | U2423017H  | 
 ---
 
 ## 🔍 GitHub Repository
