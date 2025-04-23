@@ -83,10 +83,11 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 
 ## 🧠 Team Members
 
-| Name               | Student ID |                
-|--------------------|------------|
-| Yeo Yu Xuan Dazzel | U2423800E  |
-| (Add others here)  | (ID)       | 
+| Name                          | Student ID |                
+|-------------------------------|------------|
+| Yeo Yu Xuan Dazzel            | U2423800E  |
+| Mohamed Fahath Mohammed Adhil | U2423664G  |
+| (Add others here)             | (ID)       | 
 
 ---
 
