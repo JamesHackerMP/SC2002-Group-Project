@@ -162,7 +162,7 @@ public class AuthenticationController implements UserAuthenticationController,
 
     @Override
     public String checkNric(String userName) {
-        return getUser(userName).getRole();
+        return getUser(userName).getNric();
     }
 
     @Override
