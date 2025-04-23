@@ -67,7 +67,7 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 
 ## 🧾 How to Run
 
-1. Ensure Java 17+ is installed.
+1. Ensure Java 23 is installed.
 2. Clone the repository:
    ```bash
    git clone https://github.com/<your-username>/bto-management-system.git
@@ -83,10 +83,10 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 
 ## 🧠 Team Members
 
-| Name               | Student ID | Role               |
-|--------------------|------------|--------------------|
-| Yeo Yu Xuan Dazzel | U2423800E  | Developer          |
-| (Add others here)  | (ID)       | (e.g. Designer)    |
+| Name               | Student ID |                
+|--------------------|------------|
+| Yeo Yu Xuan Dazzel | U2423800E  |
+| (Add others here)  | (ID)       | 
 
 ---
 
