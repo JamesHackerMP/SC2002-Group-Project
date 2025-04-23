@@ -6,6 +6,36 @@
 This is a command-line application built as part of the SC2002 Object-Oriented Design & Programming course at NTU. The system simulates a real-world Build-To-Order (BTO) housing application platform, where **Applicants**, **HDB Officers**, and **HDB Managers** interact with BTO projects in role-specific ways.
 
 ---
+## 🧠 Team Members
+
+| Name                          | Student ID |                
+|-------------------------------|------------|
+| Yeo Yu Xuan Dazzel            | U2423800E  |
+| Mohamed Fahath Mohammed Adhil | U2423664G  |
+| Zhang Yuhe                    | U2422060C  | 
+| Ng Zheng Da                   | U2322077H  | 
+| Huang Yitian                  | U2423017H  | 
+---
+
+## 📂 Directory Layout
+
+```plaintext
+SC2002-Group-Project/
+├── bin/                      # Compiled classes (auto-generated)
+├── src/
+│   ├── boundary/             # User interfaces
+│   ├── control/              # Business logic
+│   ├── entity/               # Data models
+│   ├── utility/              # Helper classes
+│   ├── data/                 # Active CSV data files
+│   ├── data copy/            # Backup of original data 
+│   └── Main.java             # Entry point
+├── report/
+│   ├── final_report.pdf      # Report
+│   └── uml_class_diagram.png # UML class diagram
+└── README.md
+```
+---
 
 ## 👨‍💻 Features
 
@@ -35,18 +65,6 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 
 ---
 
-## 📂 Project Structure (MVC Style)
-
-```plaintext
-├── entity/            # Domain models (e.g., Applicant, Project, Enquiry)
-├── controller/        # Business logic classes (e.g., ProjectController)
-├── boundary/          # CLI User Interfaces for different roles
-├── utility/           # Shared helpers (e.g., CSVFileHandler)
-├── Main.java          # Application entry point
-```
-
----
-
 ## 🧪 Testing Strategy
 
 - **Approach**: Manual black-box testing
@@ -70,7 +88,7 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 1. Ensure Java 23 is installed.
 2. Clone the repository:
    ```bash
-   git clone https://github.com/<your-username>/bto-management-system.git
+   git clone https://github.com/JamesHackerMP/SC2002-Group-Project.git
    ```
 3. Navigate to the project root directory.
 4. Compile and run:
@@ -81,20 +99,9 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 
 ---
 
-## 🧠 Team Members
-
-| Name                          | Student ID |                
-|-------------------------------|------------|
-| Yeo Yu Xuan Dazzel            | U2423800E  |
-| Mohamed Fahath Mohammed Adhil | U2423664G  |
-| Zhang Yuhe                    | U2422060C  | 
-| Ng Zheng Da                   | U2322077H  | 
-| Huang Yitian                  | U2423017H  | 
----
-
 ## 🔍 GitHub Repository
 
-[🔗 Click here to view the repository](https://github.com/your-repo-link)
+[🔗 Click here to view the repository](https://github.com/JamesHackerMP/SC2002-Group-Project.git)
 
 ---
 
