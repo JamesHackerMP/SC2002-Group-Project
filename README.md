@@ -6,6 +6,16 @@
 This is a command-line application built as part of the SC2002 Object-Oriented Design & Programming course at NTU. The system simulates a real-world Build-To-Order (BTO) housing application platform, where **Applicants**, **HDB Officers**, and **HDB Managers** interact with BTO projects in role-specific ways.
 
 ---
+## 🧠 Team Members
+
+| Name                          | Student ID |                
+|-------------------------------|------------|
+| Yeo Yu Xuan Dazzel            | U2423800E  |
+| Mohamed Fahath Mohammed Adhil | U2423664G  |
+| Zhang Yuhe                    | U2422060C  | 
+| Ng Zheng Da                   | U2322077H  | 
+| Huang Yitian                  | U2423017H  | 
+---
 
 ## 👨‍💻 Features
 
@@ -79,17 +89,6 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
    java Main
    ```
 
----
-
-## 🧠 Team Members
-
-| Name                          | Student ID |                
-|-------------------------------|------------|
-| Yeo Yu Xuan Dazzel            | U2423800E  |
-| Mohamed Fahath Mohammed Adhil | U2423664G  |
-| Zhang Yuhe                    | U2422060C  | 
-| Ng Zheng Da                   | U2322077H  | 
-| Huang Yitian                  | U2423017H  | 
 ---
 
 ## 🔍 GitHub Repository
