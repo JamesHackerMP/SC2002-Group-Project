@@ -93,7 +93,7 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 
 ## 🔍 GitHub Repository
 
-[🔗 Click here to view the repository]([https://github.com/JamesHackerMP/SC2002-Group-Project.git])
+[🔗 Click here to view the repository](https://github.com/JamesHackerMP/SC2002-Group-Project.git)
 
 ---
 
