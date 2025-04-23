@@ -139,15 +139,9 @@ public class CSVFileHandler implements FileDataHandler {
             
             User user = null;
             switch (type) {
-                case APPLICANT:
-                    user = new Applicant(name, nric, age, maritalStatus, password);
-                    break;
-                case OFFICER:
-                    user = new HDBOfficer(name, nric, age, maritalStatus, password);
-                    break;
-                case MANAGER:
-                    user = new HDBManager(name, nric, age, maritalStatus, password);
-                    break;
+                case APPLICANT -> user = new Applicant(name, nric, age, maritalStatus, password);
+                case OFFICER -> user = new HDBOfficer(name, nric, age, maritalStatus, password);
+                case MANAGER -> user = new HDBManager(name, nric, age, maritalStatus, password);
             }
             
             if (user != null) {

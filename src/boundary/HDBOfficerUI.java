@@ -34,7 +34,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
     public void displayMenu(HDBOfficer officer) {
         while (true) {
             System.out.println("\n=== HDB Officer Menu ===");
-            System.out.println("1. Register for Project Team");
+            System.out.println("1. Register for Project");
             System.out.println("2. View My Project");
             System.out.println("3. Process Flat Booking");
             System.out.println("4. Generate Booking Receipt");
@@ -218,15 +218,15 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
             int flatChoice = getMenuChoice();
             
             switch (flatChoice) {
-                case 0:
+                case 0 -> {
                     System.out.println("Booking canceled.");
                     return;
-                case 1:
-                    flatType = "2-Room";
-                    break;
-                default:
+                }
+                case 1 -> flatType = "2-Room";
+                default -> {
                     System.out.println("Invalid choice.");
                     return;
+                }
             }
         } else {
             boolean hasTwoRoom = currentProject.getTwoRoomUnits() > 0;
@@ -246,10 +246,11 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
             int flatChoice = getMenuChoice();
             
             switch (flatChoice) {
-                case 0:
+                case 0 -> {
                     System.out.println("Booking canceled.");
                     return;
-                case 1:
+                }
+                case 1 -> {
                     if (hasTwoRoom) {
                         flatType = "2-Room";
                     } else if (hasThreeRoom) {
@@ -258,18 +259,19 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
                         System.out.println("Invalid choice.");
                         return;
                     }
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     if (hasTwoRoom && hasThreeRoom) {
                         flatType = "3-Room";
                     } else {
                         System.out.println("Invalid choice.");
                         return;
                     }
-                    break;
-                default:
+                }
+                default -> {
                     System.out.println("Invalid choice.");
                     return;
+                }
             }
         }
         System.out.println("\nAre you sure you want to book a " + flatType + " flat for " 
@@ -303,7 +305,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
         List<Application> applications = applicationController.getAllApplications();
         List<Application> bookedApplications = new ArrayList<>();
         
-        if (assignedProjects != null && !assignedProjects.isEmpty()) {
+        if (!assignedProjects.isEmpty()) {
             for (Application application : applications) {
                 for (Project project : assignedProjects) {
                     if (application.getProjectName().equals(project.getName()) && 

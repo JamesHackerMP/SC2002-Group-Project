@@ -433,14 +433,13 @@ public class HDBManagerUI implements ProjectManagementManagerUI, OfficerManageme
             return;
         }
         
-        boolean success = false;
         switch (decision) {
             case 1 -> {
-                success = managerController.approveOfficer(selectedOfficer, selectedProject.getName());
+                boolean success = managerController.approveOfficer(selectedOfficer, selectedProject.getName());
                 System.out.println(success ? "Officer approved successfully." : "Failed to approve officer.");
             }
             case 2 -> {
-                success = managerController.rejectOfficer(selectedOfficer, selectedProject.getName());
+                boolean success = managerController.rejectOfficer(selectedOfficer, selectedProject.getName());
                 System.out.println(success ? "Officer rejected successfully." : "Failed to reject officer.");
             }
             case 0 -> System.out.println("Action canceled.");
