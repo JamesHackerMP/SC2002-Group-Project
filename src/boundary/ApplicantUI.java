@@ -2,7 +2,6 @@ package boundary;
 
 import boundary.interfaces.applicant.*;
 import control.*;
-import entity.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -12,21 +11,25 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
     private final ProjectController projectController;
     private final ApplicationController applicationController;
     private final EnquiryController enquiryController;
+    private final AuthenticationController authController;
     private final FilterController filterController;
     private final Scanner scanner;
 
     public ApplicantUI(ProjectController projectController,
                        ApplicationController applicationController,
-                       EnquiryController enquiryController, FilterController filterController) {
+                       EnquiryController enquiryController, 
+                       AuthenticationController authController,
+                       FilterController filterController) {
         this.projectController = projectController;
         this.applicationController = applicationController;
         this.enquiryController = enquiryController;
+        this.authController = authController;
         this.filterController = filterController;
         this.scanner = new Scanner(System.in);
     }
 
     @Override
-    public void displayMenu(User user) {
+    public void displayMenu(String userName) {
         while (true) {
             System.out.println("\n=== Applicant Menu ===");
             System.out.println("1. View Available Projects");
@@ -38,11 +41,11 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
     
             int choice = getMenuChoice();
             switch (choice) {
-                case 1 -> viewAvailableProjects(user);
-                case 2 -> applyForProject(user);
-                case 3 -> viewMyApplication(user);
-                case 4 -> withdrawApplication(user);
-                case 5 -> displayEnquiryMenu(user);
+                case 1 -> viewAvailableProjects(userName);
+                case 2 -> applyForProject(userName);
+                case 3 -> viewMyApplication(userName);
+                case 4 -> withdrawApplication(userName);
+                case 5 -> displayEnquiryMenu(userName);
                 case 0 -> { return; }
                 default -> System.out.println("Invalid choice. Please try again.");
             }
@@ -50,71 +53,77 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
     }
 
     @Override
-    public void viewAvailableProjects(User user) {
+    public void viewAvailableProjects(String userName) {
         System.out.println("\n=== Available Projects ===");
+        
+        List<String> projectNames = filterController.applyFilters(projectController.getVisibleProjects());
     
-        List<Project> projects = filterController.applyFilters(projectController.getVisibleProjects());
-    
-        projects.removeIf(project -> !applicationController.isEligibleForProject(user, project));
+        projectNames.removeIf(projectName -> !applicationController.isEligibleForProject(userName, projectName));
 
-        Filter filter = filterController.getFilter();
         System.out.println("Current Filters:");
-        if (filter.getNeighborhood() != null) {
-            System.out.println("Neighborhood: " + filter.getNeighborhood());
+        if (filterController.checkNeighborhood() != null) {
+            System.out.println("Neighborhood: " + filterController.checkNeighborhood());
         }
-        if (filter.getFlatTypes() != null && !filter.getFlatTypes().isEmpty()) {
-            System.out.println("Flat Types: " + filter.getFlatTypes());
+        if (filterController.checkFlatTypes() != null && !filterController.checkFlatTypes().isEmpty()) {
+            System.out.println("Flat Types: " + filterController.checkFlatTypes());
         }
-        if (filter.getOpeningAfter() != null) {
-            System.out.println("Opening After: " + filter.getOpeningAfter());
+        if (filterController.checkOpeningAfter() != null) {
+            System.out.println("Opening After: " + filterController.checkOpeningAfter());
         }
-        if (filter.getClosingBefore() != null) {
-            System.out.println("Closing Before: " + filter.getClosingBefore());
+        if (filterController.checkClosingBefore() != null) {
+            System.out.println("Closing Before: " + filterController.checkClosingBefore());
         }
-        if (filter.getManager() != null) {
-            System.out.println("Manager: " + filter.getManager());
+        if (filterController.checkManager() != null) {
+            System.out.println("Manager: " + filterController.checkManager());
         }
-        if (filter.getOfficer() != null) {
-            System.out.println("Officer: " + filter.getOfficer());
+        if (filterController.checkOfficer() != null) {
+            System.out.println("Officer: " + filterController.checkOfficer());
         }
     
-        if (projects.isEmpty()) {
+        if (projectNames.isEmpty()) {
             System.out.println("No projects available with the current filters.");
             return;
         }
-    
-        for (Project project : projects) {
-            System.out.println("\nProject Name: " + project.getName());
-            System.out.println("Neighborhood: " + project.getNeighborhood());
-            if (project.getTwoRoomUnits() > 0) {
-                System.out.println("2-Room Units Available: " + project.getTwoRoomUnits());
-                System.out.println("2-Room Price: " + project.getTwoRoomPrice());
-            }
-            if (project.getThreeRoomUnits() > 0 && user.getMaritalStatus().equalsIgnoreCase("Married")) {
-                System.out.println("3-Room Units Available: " + project.getThreeRoomUnits());
-                System.out.println("3-Room Price: " + project.getThreeRoomPrice());
-            }
-            System.out.println("Application Period: " + project.getOpeningDate() + " to " + project.getClosingDate());
-            System.out.println("Manager: " + project.getManager());
-            System.out.println("Officers: " + project.getOfficers());
+        
+        for (String projectName : projectNames) {
+        System.out.println("\nProject Name: " + projectName);
+        System.out.println("Neighborhood: " + projectController.checkNeighborhood(projectName));
+        
+        if (projectController.checkHasTwoRoomUnits(projectName)) {
+            System.out.println("2-Room Units Available: " + projectController.checkTwoRoomUnits(projectName));
+            System.out.println("2-Room Price: " + projectController.checkTwoRoomPrice(projectName));
+        }
+        
+        if (projectController.checkHasThreeRoomUnits(projectName) && 
+            authController.checkMaritalStatus(userName).equalsIgnoreCase("Married")) {
+            System.out.println("3-Room Units Available: " + projectController.checkThreeRoomUnits(projectName));
+            System.out.println("3-Room Price: " + projectController.checkThreeRoomPrice(projectName));
+        }
+        
+        System.out.println("Application Period: " + 
+            projectController.checkOpeningDate(projectName) + " to " + 
+            projectController.checkClosingDate(projectName));
+        
+        System.out.println("Manager: " + projectController.checkManager(projectName));
+        System.out.println("Officers: " + projectController.checkOfficers(projectName));
         }
     }
 
     @Override
-    public void applyForProject(User user) {
-        List<Project> projects = projectController.getVisibleProjects();
+    public void applyForProject(String userName) {
+        List<String> projectNames = projectController.getVisibleProjects();
     
-        projects.removeIf(project -> !applicationController.isEligibleForProject(user, project));
+        projectNames.removeIf(projectName -> !applicationController.isEligibleForProject(userName, projectName));
     
-        if (projects.isEmpty()) {
+        if (projectNames.isEmpty()) {
             System.out.println("No projects available for application.");
             return;
         }
     
         System.out.println("\n=== Available Projects ===");
-        for (int i = 0; i < projects.size(); i++) {
-            Project project = projects.get(i);
-            System.out.println((i + 1) + ". " + project.getName() + " (" + project.getNeighborhood() + ")");
+        for (int i = 0; i < projectNames.size(); i++) {
+            String projectName = projectNames.get(i);
+            System.out.println((i + 1) + ". " + projectName + " (" + projectController.checkNeighborhood(projectName) + ")");
         }
         System.out.println("0. Cancel");
     
@@ -124,17 +133,17 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
             System.out.println("Application canceled.");
             return;
         }
-        if (choice < 1 || choice > projects.size()) {
+        if (choice < 1 || choice > projectNames.size()) {
             System.out.println("Invalid choice. Application canceled.");
             return;
         }
     
-        Project selectedProject = projects.get(choice - 1);
+        String selectedProjectName = projectNames.get(choice - 1);
         String flatTypeApply;
 
-        if (user.getMaritalStatus().equalsIgnoreCase("Married")) {
-            boolean hasTwoRoom = selectedProject.getTwoRoomUnits() > 0;
-            boolean hasThreeRoom = selectedProject.getThreeRoomUnits() > 0;
+        if (authController.checkMaritalStatus(userName).equalsIgnoreCase("Married")) {
+            boolean hasTwoRoom = projectController.checkTwoRoomUnits(selectedProjectName) > 0;
+            boolean hasThreeRoom = projectController.checkThreeRoomUnits(selectedProjectName) > 0;
             
             if (hasTwoRoom && hasThreeRoom) {
                 System.out.println("1. 2-Room");
@@ -182,7 +191,7 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
         }
 
         System.out.println("\nYou are about to apply for:");
-        System.out.println("Project: " + selectedProject.getName());
+        System.out.println("Project: " + selectedProjectName);
         System.out.println("Flat Type: " + flatTypeApply);
         System.out.println("\nConfirm application?");
         System.out.println("1. Yes, submit application");
@@ -194,7 +203,7 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
             return;
         }
     
-        if (applicationController.applyForProject(user, selectedProject.getName(), flatTypeApply)) {
+        if (applicationController.applyForProject(userName, selectedProjectName, flatTypeApply)) {
             System.out.println("Application submitted successfully!");
         } else {
             System.out.println("Failed to apply. You my have an existing application or be ineligible.");
@@ -202,38 +211,36 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
     }
 
     @Override
-    public void viewMyApplication(User user) {
-        Application application = applicationController.getApplication(user.getName());
-        if (application == null) {
+    public void viewMyApplication(String userName) {
+        if (applicationController.getApplication(userName) == null) {
             System.out.println("You have no active application.");
             return;
         }
 
         System.out.println("\n=== Your Application ===");
-        System.out.println("Project: " + application.getProjectName());
-        System.out.println("Flat Type Apply: " + application.getFlatTypeApply());
-        System.out.println("Status: " + application.getStatus());
-        if ("SUCCESSFUL".equals(application.getStatus().toString())) {
-            Project project = projectController.getProject(application.getProjectName());
-            System.out.println("Officers you may contact: " + project.getOfficers());
+        System.out.println("Project: " + applicationController.checkProjectName(userName));
+        System.out.println("Flat Type Apply: " + applicationController.checkFlatTypeApply(userName));
+        System.out.println("Status: " + applicationController.checkStatus(userName));
+        if ("SUCCESSFUL".equals(applicationController.checkStatus(userName).toString())) {
+            String projectName = applicationController.checkProjectName(userName);
+            System.out.println("Officers you may contact: " + projectController.checkOfficers(projectName));
         }
-        if (application.getFlatType() != null) {
-            System.out.println("Flat Type: " + application.getFlatType());
-            System.out.println("Price: " + application.getPrice());
+        if (applicationController.checkFlatType(userName) != null) {
+            System.out.println("Flat Type: " + applicationController.checkFlatType(userName));
+            System.out.println("Price: " + applicationController.checkPrice(userName));
         }
     }
 
     @Override
-    public void withdrawApplication(User user) {
-        Application application = applicationController.getApplication(user.getName());
-        
-        if (application == null) {
+    public void withdrawApplication(String userName) {
+        if (applicationController.getApplication(userName) == null) {
             System.out.println("You have no active application to withdraw.");
             return;
         }
         
         System.out.println("\n=== Withdraw Application ===");
-        System.out.println("You are about to withdraw your application for project: " + application.getProjectName());
+        System.out.println("You are about to withdraw your application for project: " + 
+            applicationController.checkProjectName(userName));
         System.out.println("This action cannot be undone. Are you sure?");
         System.out.println("1. Yes, withdraw my application");
         System.out.println("0. No, cancel");
@@ -245,15 +252,14 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
             return;
         }
         
-        if (applicationController.requestWithdrawal(user.getName())) {
+        if (applicationController.requestWithdrawal(userName)) {
             System.out.println("Application withdrawn successfully.");
         } else {
             System.out.println("Failed to withdraw application. It may already be processed or not eligible.");
         }
     }
-
     @Override
-    public void displayEnquiryMenu(User user) {
+    public void displayEnquiryMenu(String userName) {
         while (true) {
             System.out.println("\n=== Enquiry Menu ===");
             System.out.println("1. Create Enquiry");
@@ -264,10 +270,10 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
     
             int choice = getMenuChoice();
             switch (choice) {
-                case 1 -> createEnquiry(user);
-                case 2 -> viewMyEnquiries(user);
-                case 3 -> editEnquiry(user);
-                case 4 -> deleteEnquiry(user);
+                case 1 -> createEnquiry(userName);
+                case 2 -> viewMyEnquiries(userName);
+                case 3 -> editEnquiry(userName);
+                case 4 -> deleteEnquiry(userName);
                 case 0 -> { return; }
                 default -> System.out.println("Invalid choice. Please try again.");
             }
@@ -275,63 +281,65 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
     }
 
     @Override
-    public void createEnquiry(User user) {
-        List<Project> projects = projectController.getVisibleProjects();
+    public void createEnquiry(String userName) {
+        List<String> projectNames = projectController.getVisibleProjects();
 
-        if (projects.isEmpty()) {
+        if (projectNames.isEmpty()) {
             System.out.println("No projects available for enquiry.");
             return;
         }
 
         System.out.println("\n=== Available Projects ===");
-        for (int i = 0; i < projects.size(); i++) {
-            Project project = projects.get(i);
-            System.out.println((i + 1) + ". " + project.getName() + " (" + project.getNeighborhood() + ")");
+        for (int i = 0; i < projectNames.size(); i++) {
+            String projectName = projectNames.get(i);
+            System.out.println((i + 1) + ". " + projectName + " (" + projectController.checkNeighborhood(projectName) + ")");
         }
 
         System.out.print("Select a project for enquiry (Enter number) ");
         int choice = getMenuChoice();
-        if (choice < 1 || choice > projects.size()) {
+        if (choice < 1 || choice > projectNames.size()) {
             System.out.println("Invalid choice. Enquiry creation canceled.");
             return;
         }
 
-        Project selectedProject = projects.get(choice - 1);
+        String selectedProjectName = projectNames.get(choice - 1);
 
         System.out.print("Enter your question: ");
         String question = scanner.nextLine();
 
-        Enquiry enquiry = enquiryController.createEnquiry(user.getName(), selectedProject.getName(), question);
-        System.out.println("Enquiry created with ID: " + enquiry.getId());
-        System.out.println("Posted on: " + enquiry.getFormattedCreatedDate());
+        String enquiryId = enquiryController.createEnquiry(userName, selectedProjectName, question).getId();
+        System.out.println("Enquiry created with ID: " + enquiryId);
+        System.out.println("Posted on: " + enquiryController.checkFormattedCreatedDate(enquiryId));
     }
 
     @Override
-    public void viewMyEnquiries(User user) {
-        List<Enquiry> enquiries = enquiryController.getEnquiriesByApplicant(user.getName());
-    
-        if (enquiries.isEmpty()) {
+    public void viewMyEnquiries(String userName) {
+        List<String> enquiryIds = enquiryController.getEnquiriesByApplicant(userName);
+
+        if (enquiryIds.isEmpty()) {
             System.out.println("You have no enquiries.");
             return;
         }
-    
+
         System.out.println("\n=== Your Enquiries ===");
-        for (int i = 0; i < enquiries.size(); i++) {
-            displayEnquiry(i, enquiries.get(i), false);
+        for (int i = 0; i < enquiryIds.size(); i++) {
+            displayEnquiry(i, enquiryIds.get(i), false);
         }
     }
 
     @Override
-    public void displayEnquiry(int index, Enquiry enquiry, boolean canReply) {
-        System.out.println((index + 1) + ". Project: " + enquiry.getProjectName() + 
+    public void displayEnquiry(int index, String enquiryId, boolean canReply) {
+        System.out.println((index + 1) + ". Project: " + enquiryController.checkProjectName(enquiryId) + 
                 (canReply ? " [Can Reply]" : " [View Only]"));
-        System.out.println("   ID: " + enquiry.getId());
-        System.out.println("   Applicant: " + enquiry.getApplicantName());
-        System.out.println("   Question: " + enquiry.getQuestion());
-        System.out.println("   Posted: " + enquiry.getFormattedCreatedDate());
-        if (enquiry.getAnswer() != null) {
-            System.out.println("   Answer: " + enquiry.getAnswer());
-            System.out.println("   Answered: " + enquiry.getFormattedAnsweredDate());
+        System.out.println("   ID: " + enquiryId);
+        System.out.println("   Applicant: " + enquiryController.checkApplicantName(enquiryId));
+        System.out.println("   Question: " + enquiryController.checkQuestion(enquiryId));
+        System.out.println("   Posted: " + enquiryController.checkFormattedCreatedDate(enquiryId));
+        
+        String answer = enquiryController.checkAnswer(enquiryId);
+        if (answer != null) {
+            System.out.println("   Answer: " + answer);
+            System.out.println("   Answered: " + enquiryController.checkFormattedAnsweredDate(enquiryId));
             System.out.println("   Status: Answered");
         } else {
             System.out.println("   Status: Pending response");
@@ -340,30 +348,34 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
     }
 
     @Override
-    public void editEnquiry(User user) {
-        List<Enquiry> enquiries = enquiryController.getEnquiriesByApplicant(user.getName());
+    public void editEnquiry(String userName) {
+        List<String> enquiryIds = enquiryController.getEnquiriesByApplicant(userName);
         
-        if (enquiries.isEmpty()) {
+        if (enquiryIds.isEmpty()) {
             System.out.println("You have no enquiries to edit.");
             return;
         }
         
-        List<Enquiry> editableEnquiries = new ArrayList<>();
-        for (Enquiry enquiry : enquiries) {
-            if (enquiry.getAnswer() == null || enquiry.getAnswer().isEmpty()) {
-                editableEnquiries.add(enquiry);
+        List<String> editableEnquiryIds = new ArrayList<>();
+        for (String enquiryId : enquiryIds) {
+            if (enquiryController.getEnquiry(enquiryId) == null || 
+                enquiryController.checkAnswer(enquiryId) == null || 
+                enquiryController.checkAnswer(enquiryId).isEmpty()) {
+                editableEnquiryIds.add(enquiryId);
             }
         }
         
-        if (editableEnquiries.isEmpty()) {
+        if (editableEnquiryIds.isEmpty()) {
             System.out.println("You have no enquiries that can be edited. Answered enquiries cannot be modified.");
             return;
         }
         
         System.out.println("\n=== Edit Enquiry ===");
-        for (int i = 0; i < editableEnquiries.size(); i++) {
-            Enquiry enquiry = editableEnquiries.get(i);
-            System.out.println((i + 1) + ". ID: " + enquiry.getId() + " | Project: " + enquiry.getProjectName() + " | Question: " + enquiry.getQuestion());
+        for (int i = 0; i < editableEnquiryIds.size(); i++) {
+            String enquiryId = editableEnquiryIds.get(i);
+            System.out.println((i + 1) + ". ID: " + enquiryId + 
+                            " | Project: " + enquiryController.checkProjectName(enquiryId) + 
+                            " | Question: " + enquiryController.checkQuestion(enquiryId));
         }
         System.out.println("0. Cancel");
         
@@ -373,45 +385,49 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
             System.out.println("Edit canceled.");
             return;
         }
-        if (choice < 1 || choice > editableEnquiries.size()) {
+        if (choice < 1 || choice > editableEnquiryIds.size()) {
             System.out.println("Invalid choice. Edit canceled.");
             return;
         }
         
-        Enquiry selectedEnquiry = editableEnquiries.get(choice - 1);
+        String selectedEnquiryId = editableEnquiryIds.get(choice - 1);
         
         System.out.print("Enter new question: ");
         String newQuestion = scanner.nextLine();
         
-        boolean success = enquiryController.updateEnquiry(selectedEnquiry.getId(), newQuestion);
+        boolean success = enquiryController.updateEnquiry(selectedEnquiryId, newQuestion);
         System.out.println(success ? "Enquiry updated." : "Failed to update enquiry.");
     }
 
     @Override
-    public void deleteEnquiry(User user) {
-        List<Enquiry> enquiries = enquiryController.getEnquiriesByApplicant(user.getName());
+    public void deleteEnquiry(String userName) {
+        List<String> enquiryIds = enquiryController.getEnquiriesByApplicant(userName);
         
-        if (enquiries.isEmpty()) {
+        if (enquiryIds.isEmpty()) {
             System.out.println("You have no enquiries to delete.");
             return;
         }
         
-        List<Enquiry> deletableEnquiries = new ArrayList<>();
-        for (Enquiry enquiry : enquiries) {
-            if (enquiry.getAnswer() == null || enquiry.getAnswer().isEmpty()) {
-                deletableEnquiries.add(enquiry);
+        List<String> deletableEnquiryIds = new ArrayList<>();
+        for (String enquiryId : enquiryIds) {
+            if (enquiryController.getEnquiry(enquiryId) == null || 
+                enquiryController.checkAnswer(enquiryId) == null ||
+                enquiryController.checkAnswer(enquiryId).isEmpty()) {
+                deletableEnquiryIds.add(enquiryId);
             }
         }
         
-        if (deletableEnquiries.isEmpty()) {
+        if (deletableEnquiryIds.isEmpty()) {
             System.out.println("You have no enquiries that can be deleted. Answered enquiries cannot be removed.");
             return;
         }
         
         System.out.println("\n=== Delete Enquiry ===");
-        for (int i = 0; i < deletableEnquiries.size(); i++) {
-            Enquiry enquiry = deletableEnquiries.get(i);
-            System.out.println((i + 1) + ". ID: " + enquiry.getId() + " | Project: " + enquiry.getProjectName() + " | Question: " + enquiry.getQuestion());
+        for (int i = 0; i < deletableEnquiryIds.size(); i++) {
+            String enquiryId = deletableEnquiryIds.get(i);
+            System.out.println((i + 1) + ". ID: " + enquiryId + 
+                            " | Project: " + enquiryController.checkProjectName(enquiryId) + 
+                            " | Question: " + enquiryController.checkQuestion(enquiryId));
         }
         System.out.println("0. Cancel");
         
@@ -421,14 +437,14 @@ public class ApplicantUI implements ProjectViewUI, ApplicationManagementUI,
             System.out.println("Deletion canceled.");
             return;
         }
-        if (choice < 1 || choice > deletableEnquiries.size()) {
+        if (choice < 1 || choice > deletableEnquiryIds.size()) {
             System.out.println("Invalid choice. Deletion canceled.");
             return;
         }
         
-        Enquiry selectedEnquiry = deletableEnquiries.get(choice - 1);
+        String selectedEnquiryId = deletableEnquiryIds.get(choice - 1);
         
-        boolean success = enquiryController.deleteEnquiry(selectedEnquiry.getId());
+        boolean success = enquiryController.deleteEnquiry(selectedEnquiryId);
         System.out.println(success ? "Enquiry deleted." : "Failed to delete enquiry.");
     }
 

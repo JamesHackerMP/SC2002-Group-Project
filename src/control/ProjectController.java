@@ -3,6 +3,7 @@ package control;
 import control.interfaces.project.*;
 import entity.Project;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 import util.FileDataHandler;
 
@@ -68,22 +69,26 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
     }
 
     @Override
-    public List<Project> getAllProjects() {
-        List<Project> allProjects = new ArrayList<>(projects.values());
-        allProjects.sort(Comparator.comparing(Project::getName, String.CASE_INSENSITIVE_ORDER));
-        return allProjects;
+    public List<String> getAllProjects() {
+        List<String> allProjectNames = new ArrayList<>();
+        List<Project> projectList = new ArrayList<>(projects.values());
+        projectList.sort(Comparator.comparing(Project::getName, String.CASE_INSENSITIVE_ORDER));
+        for (Project project : projectList) {
+            allProjectNames.add(project.getName());
+        }
+        return allProjectNames;
     }
     
     @Override
-    public List<Project> getVisibleProjects() {
-        List<Project> visibleProjects = new ArrayList<>();
+    public List<String> getVisibleProjects() {
+        List<String> visibleProjectNames = new ArrayList<>();
         for (Project project : projects.values()) {
             if (project.isVisible()) {
-                visibleProjects.add(project);
+                visibleProjectNames.add(project.getName());
             }
         }
-        visibleProjects.sort(Comparator.comparing(Project::getName, String.CASE_INSENSITIVE_ORDER));
-        return visibleProjects;
+        visibleProjectNames.sort(String.CASE_INSENSITIVE_ORDER);
+        return visibleProjectNames;
     }
 
     @Override
@@ -111,48 +116,49 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
     }
 
     @Override
-    public List<Project> getProjectsByManager(String managerName) {
-        List<Project> managerProjects = new ArrayList<>();
+    public List<String> getProjectsByManager(String managerName) {
+        List<String> managerProjectNames = new ArrayList<>();
         for (Project project : projects.values()) {
             if (project.getManager().equalsIgnoreCase(managerName)) {
-                managerProjects.add(project);
+                managerProjectNames.add(project.getName());
             }
         }
-        return managerProjects;
+        return managerProjectNames;
     }
 
     @Override
-    public Project getActiveProjectByManager(String managerName) {
+    public String getActiveProjectByManager(String managerName) {
         return projects.values().stream()
             .filter(project -> project.getManager().equalsIgnoreCase(managerName) && 
                     project.isOpenForApplication() &&
                     project.isVisible())
             .findFirst()
+            .map(Project::getName)
             .orElse(null);
     }
 
     @Override
-    public List<Project> getProjectsByOfficer(String officerName) {
-        List<Project> officerProjects = new ArrayList<>();
+    public List<String> getProjectsByOfficer(String officerName) {
+        List<String> officerProjectNames = new ArrayList<>();
         for (Project project : projects.values()) {
             if (project.getOfficers().contains(officerName)) {
-                officerProjects.add(project);
+                officerProjectNames.add(project.getName());
             }
         }
-        return officerProjects;
+        return officerProjectNames;
     }
 
     @Override
-    public Project getCurrentProjectByOfficer(String officerName) {
-        List<Project> officerProjects = new ArrayList<>();
+    public String getCurrentProjectByOfficer(String officerName) {
+        List<Project> officerProjectNames = new ArrayList<>();
         for (Project project : projects.values()) {
             if (project.getOfficers().contains(officerName)) {
-                officerProjects.add(project);
+                officerProjectNames.add(project);
             }
         }
-        for (Project project : officerProjects) {
+        for (Project project : officerProjectNames) {
             if (project.isOpenForApplication()) {
-                return project;
+                return project.getName();
             }
         }
         return null;
@@ -166,5 +172,92 @@ public class ProjectController implements ProjectQueryController, ProjectManagem
     @Override
     public int getProjectCount() {
         return projects.size();
+    }
+
+    @Override
+    public String checkNeighborhood(String projectName) {
+        return getProject(projectName).getNeighborhood();
+    }
+
+    @Override
+    public int checkTwoRoomUnits(String projectName) {
+        return getProject(projectName).getTwoRoomUnits();
+    }
+
+    @Override
+    public int checkTwoRoomPrice(String projectName) {
+        return getProject(projectName).getTwoRoomPrice();
+    }
+
+    @Override
+    public int checkThreeRoomUnits(String projectName) {
+        return getProject(projectName).getThreeRoomUnits();
+    }
+
+    @Override
+    public int checkThreeRoomPrice(String projectName) {
+        return getProject(projectName).getThreeRoomPrice();
+    }
+
+    @Override
+    public LocalDate checkOpeningDate(String projectName) {
+        return getProject(projectName).getOpeningDate();
+    }
+
+    @Override
+    public LocalDate checkClosingDate(String projectName) {
+        return getProject(projectName).getClosingDate();
+    }
+
+    @Override
+    public String checkManager(String projectName) {
+        return getProject(projectName).getManager();
+    }
+
+    @Override
+    public int checkOfficerSlots(String projectName) {
+        return getProject(projectName).getOfficerSlots();
+    }
+
+    @Override
+    public boolean checkVisible(String projectName) {
+        return getProject(projectName).isVisible();
+    }
+
+    @Override
+    public List<String> checkOfficers(String projectName) {
+        return new ArrayList<>(getProject(projectName).getOfficers());
+    }
+
+    @Override
+    public boolean checkHasTwoRoomUnits(String projectName) {
+        return getProject(projectName).getTwoRoomUnits() > 0;
+    }
+
+    @Override
+    public boolean checkHasThreeRoomUnits(String projectName) {
+        return getProject(projectName).getThreeRoomUnits() > 0;
+    }
+
+    @Override
+    public List<String> checkPendingOfficers(String projectName) {
+        return getProject(projectName).getPendingOfficers();
+    }
+
+    @Override
+    public List<String> getVisibleProjectNames() {
+        return getVisibleProjects();
+    }
+
+    @Override
+    public List<String> getEligibleProjectNames(String username) {
+        List<String> eligibleProjects = new ArrayList<>();
+        for (Project project : projects.values()) {
+            if (project.isVisible() && project.isOpenForApplication()) {
+                eligibleProjects.add(project.getName());
+            }
+        }
+        eligibleProjects.sort(String.CASE_INSENSITIVE_ORDER);
+        return eligibleProjects;
     }
 }

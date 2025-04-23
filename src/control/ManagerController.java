@@ -27,8 +27,18 @@ public class ManagerController implements ProjectManagementManagerController,
 
     @Override
     public boolean createProject(HDBManager manager, Project project) {
-    
-        List<Project> currentProjects = projectController.getProjectsByManager(manager.getName());
+        if (manager == null || project == null) {
+            return false;
+        }
+        
+        List<String> projectNames = projectController.getProjectsByManager(manager.getName());
+        List<Project> currentProjects = new ArrayList<>();
+        for (String name : projectNames) {
+            Project currentProject = projectController.getProject(name);
+            if (currentProject != null) {
+                currentProjects.add(currentProject);
+            }
+        }
         for (Project p : currentProjects) {
             if (isOverlappingPeriod(p, project)) {
                 return false;

@@ -53,19 +53,19 @@ public class AuthenticationController implements UserAuthenticationController,
     }
 
     @Override
-    public boolean checkNric(String nric) {
+    public boolean verifyNric(String nric) {
         return isValidNric(nric);
     }
 
     @Override
-    public User authenticate(String nric, String password) {
+    public String authenticate(String nric, String password) {
         if (password == null || password.isEmpty()) {
             return null;
         }
 
         User user = users.get(nric.toUpperCase());
         if (user != null && user.getPassword().equals(password)) {
-            return user;
+            return user.getName();
         }
         return null;
     }
@@ -139,6 +139,26 @@ public class AuthenticationController implements UserAuthenticationController,
             }
         }
         return count;
+    }
+
+    @Override
+    public String checkRole(String userName) {
+        return getUser(userName).getRole();
+    }
+
+    @Override
+    public String checkMaritalStatus(String userName) {
+        return getUser(userName).getMaritalStatus();
+    }
+
+    @Override
+    public String checkNric(String userName) {
+        return getUser(userName).getRole();
+    }
+
+    @Override
+    public int checkAge(String userName) {
+        return getUser(userName).getAge();
     }
 
 }

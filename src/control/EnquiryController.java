@@ -2,6 +2,7 @@ package control;
 
 import control.interfaces.enquiry.*;
 import entity.Enquiry;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,29 +62,61 @@ public class EnquiryController implements EnquiryCreationController,
     }
 
     @Override
-    public List<Enquiry> getEnquiriesByApplicant(String applicantName) {
-        List<Enquiry> applicantEnquiries = new ArrayList<>();
+    public List<String> getEnquiriesByApplicant(String applicantName) {
+        List<String> applicantEnquiryIds = new ArrayList<>();
         for (Enquiry enquiry : enquiries.values()) {
             if (enquiry.getApplicantName().equals(applicantName)) {
-                applicantEnquiries.add(enquiry);
+                applicantEnquiryIds.add(enquiry.getId());
             }
         }
-        return applicantEnquiries;
+        return applicantEnquiryIds;
     }
-
+    
     @Override
-    public List<Enquiry> getEnquiriesByProject(String projectName) {
-        List<Enquiry> projectEnquiries = new ArrayList<>();
+    public List<String> getEnquiriesByProject(String projectName) {
+        List<String> projectEnquiryIds = new ArrayList<>();
         for (Enquiry enquiry : enquiries.values()) {
             if (enquiry.getProjectName().equals(projectName)) {
-                projectEnquiries.add(enquiry);
+                projectEnquiryIds.add(enquiry.getId());
             }
         }
-        return projectEnquiries;
+        return projectEnquiryIds;
+    }
+    
+    @Override
+    public List<String> getAllEnquiries() {
+        List<String> allEnquiryIds = new ArrayList<>();
+        for (Enquiry enquiry : enquiries.values()) {
+            allEnquiryIds.add(enquiry.getId());
+        }
+        return allEnquiryIds;
     }
 
     @Override
-    public List<Enquiry> getAllEnquiries() {
-        return new ArrayList<>(enquiries.values());
+    public String checkApplicantName(String enquiryId) { return getEnquiry(enquiryId).getApplicantName(); }
+
+    @Override
+    public String checkProjectName(String enquiryId) { return getEnquiry(enquiryId).getProjectName(); }
+
+    @Override
+    public String checkQuestion(String enquiryId) { return getEnquiry(enquiryId).getQuestion(); }
+
+    @Override
+    public String checkAnswer(String enquiryId) { return getEnquiry(enquiryId).getAnswer(); }
+
+    @Override
+    public LocalDateTime checkCreatedDate(String enquiryId) { return getEnquiry(enquiryId).getCreatedDate(); }
+
+    @Override
+    public LocalDateTime checkAnsweredDate(String enquiryId) { return getEnquiry(enquiryId).getAnsweredDate(); }
+
+    @Override
+    public String checkFormattedCreatedDate(String enquiryId) {
+        return getEnquiry(enquiryId).getFormattedCreatedDate();
+    }
+
+    @Override
+    public String checkFormattedAnsweredDate(String enquiryId) {
+        return getEnquiry(enquiryId).getFormattedAnsweredDate() != null ? getEnquiry(enquiryId).getFormattedAnsweredDate() : "Not answered yet";
     }
 }

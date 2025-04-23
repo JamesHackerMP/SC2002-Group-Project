@@ -1,8 +1,6 @@
 package boundary.interfaces.user;
 
-import entity.User;
-
 public interface AuthenticationUI {
-    User login();
-    boolean changePassword(User user);
+    String login();
+    boolean changePassword(String userName);
 }

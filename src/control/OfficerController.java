@@ -3,6 +3,7 @@ package control;
 import control.interfaces.officer.*;
 import entity.HDBOfficer;
 import entity.Project;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OfficerController implements OfficerRegistrationController, OfficerApprovalController {
@@ -19,7 +20,14 @@ public class OfficerController implements OfficerRegistrationController, Officer
         Project newProject = projectController.getProject(projectName);
         if (newProject == null) return false;
 
-        List<Project> currentProjects = projectController.getProjectsByOfficer(officer.getName());
+        List<String> projectNames = projectController.getProjectsByOfficer(officer.getName());
+        List<Project> currentProjects = new ArrayList<>();
+        for (String name : projectNames) {
+            Project project = projectController.getProject(name);
+            if (project != null) {
+                currentProjects.add(project);
+            }
+        }
         for (Project project : currentProjects) {
             if (isOverlappingPeriod(project, newProject)) {
                 return false;

@@ -1,16 +1,7 @@
 package boundary;
 
 import boundary.interfaces.user.*;
-import control.ApplicationController;
-import control.AuthenticationController;
-import control.EnquiryController;
-import control.FilterController;
-import control.ProjectController;
-import entity.Application;
-import entity.Enquiry;
-import entity.Filter;
-import entity.Project;
-import entity.User;
+import control.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -40,12 +31,12 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
     }
 
     @Override
-    public User login() {
+    public String login() {
         System.out.println("\n=== Login ===");
         System.out.print("Enter NRIC: ");
         String nric = scanner.nextLine();
 
-        if (authController.checkNric(nric) == false) {
+        if (authController.verifyNric(nric) == false) {
             System.out.println("Invalid NRIC. Please try again.");
             return null;
         }
@@ -53,41 +44,40 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
         System.out.print("Enter Password: ");
         String password = scanner.nextLine();        
 
-        User user = authController.authenticate(nric, password);
-        if (user == null) {
+        String userName = authController.authenticate(nric, password);
+        if (userName == null) {
             System.out.println("Invalid password. Please try again.");
             return null;
         }
 
-        filterController.setCurrentUser(user);
+        filterController.setCurrentUser(userName);
 
-        System.out.println("\nLogin successful! Welcome, " + user.getName() + " (" + user.getRole() + ")");
+        System.out.println("\nLogin successful! Welcome, " + userName + " (" + authController.checkRole(userName) + ")");
         
-        displayNotifications(user);
+        displayNotifications(userName);
         
-        return user;
+        return userName;
         }
         
         @Override
-        public void displayNotifications(User user) {
-            switch (user.getRole()) {
-                case "Applicant" -> displayApplicantNotifications(user);
-                case "HDBOfficer" -> displayOfficerNotifications(user);
-                case "HDBManager" -> displayManagerNotifications(user);
+        public void displayNotifications(String userName) {
+            switch (authController.checkRole(userName)) {
+                case "Applicant" -> displayApplicantNotifications(userName);
+                case "HDBOfficer" -> displayOfficerNotifications(userName);
+                case "HDBManager" -> displayManagerNotifications(userName);
             }
         }
         
         @Override
-        public void displayApplicantNotifications(User user) {
+        public void displayApplicantNotifications(String userName) {
 
-            Application application = applicationController.getApplication(user.getName());
-            if (application != null) {
+            if (applicationController.getApplication(userName) != null) {
                 System.out.println("\nNOTIFICATION: Your application for project " + 
-                                application.getProjectName() + " is " + application.getStatus());
+                applicationController.checkProjectName(userName) + " is " + applicationController.checkStatus(userName));
             }
             
-            List<Enquiry> answeredEnquiries = enquiryController.getEnquiriesByApplicant(user.getName()).stream()
-                    .filter(e -> e.getAnswer() != null && !e.getAnswer().isEmpty())
+            List<String> answeredEnquiries = enquiryController.getEnquiriesByApplicant(userName).stream()
+                    .filter(e -> enquiryController.getEnquiry(e) != null && !enquiryController.checkAnswer(e).isEmpty())
                     .toList();
             
             if (!answeredEnquiries.isEmpty()) {
@@ -95,22 +85,25 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
                                 " answered enquiries. Check the Manage Enquiry menu to view responses.");
             }
             
-            if (application == null && answeredEnquiries.isEmpty()) {
+            if (applicationController.getApplication(userName) == null && answeredEnquiries.isEmpty()) {
                 System.out.println("\nNOTIFICATION: No current applications or enquiry responses.");
             }
         }
         
         @Override
-        public void displayOfficerNotifications(User user) {
-            Project currentProject = projectController.getCurrentProjectByOfficer(user.getName());
-            if (currentProject != null) {
+        public void displayOfficerNotifications(String userName) {
+            String currentProjectName = projectController.getCurrentProjectByOfficer(userName);
+            if (currentProjectName != null) {
                 long pendingBookings = applicationController.getAllApplications().stream()
-                        .filter(a -> a.getProjectName().equals(currentProject.getName()) && 
-                            a.getStatus() == Application.Status.SUCCESSFUL)
-                        .count();
+                .filter(a -> {
+                    String applicantName = a.getApplicantName();
+                    return applicationController.checkProjectName(applicantName).equals(currentProjectName) && 
+                        applicationController.isStatusSuccessful(applicantName);
+                })
+                .count();
                 
-                long unansweredEnquiries = enquiryController.getEnquiriesByProject(currentProject.getName()).stream()
-                        .filter(e -> e.getAnswer() == null)
+                long unansweredEnquiries = enquiryController.getEnquiriesByProject(currentProjectName).stream()
+                        .filter(e -> enquiryController.checkAnswer(e) == null)
                         .count();
                         
                 if (pendingBookings > 0) {
@@ -120,7 +113,7 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
                 
                 if (unansweredEnquiries > 0) {
                     System.out.println("\nNOTIFICATION: You have " + unansweredEnquiries + 
-                                    " unanswered enquiries for project " + currentProject.getName() + ".");
+                                    " unanswered enquiries for project " + currentProjectName + ".");
                 }
                 
                 if (pendingBookings == 0 && unansweredEnquiries == 0) {
@@ -130,24 +123,27 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
         }
         
         @Override
-        public void displayManagerNotifications(User user) {
-            List<Project> managerProjects = projectController.getProjectsByManager(user.getName());
-            if (!managerProjects.isEmpty()) {
+        public void displayManagerNotifications(String userName) {
+            List<String> managerProjectNames = projectController.getProjectsByManager(userName);
+            if (!managerProjectNames.isEmpty()) {
                 int totalPendingOfficers = 0;
                 int totalPendingApplications = 0;
                 int totalUnansweredEnquiries = 0;
                 
-                for (Project project : managerProjects) {
-                    totalPendingOfficers += project.getPendingOfficers().size();
+                for (String projectName : managerProjectNames) {
+                    totalPendingOfficers += projectController.checkPendingOfficers(projectName).size();
                     
                     long pendingApps = applicationController.getAllApplications().stream()
-                            .filter(a -> a.getProjectName().equals(project.getName()) && 
-                                a.getStatus() == Application.Status.PENDING)
+                            .filter(a -> {
+                                String applicantName = a.getApplicantName();
+                                return applicationController.checkProjectName(applicantName).equals(projectName) && 
+                                applicationController.isStatusPending(applicantName);
+                            })
                             .count();
                     totalPendingApplications += pendingApps;
                     
-                    long unanswered = enquiryController.getEnquiriesByProject(project.getName()).stream()
-                            .filter(e -> e.getAnswer() == null)
+                    long unanswered = enquiryController.getEnquiriesByProject(projectName).stream()
+                            .filter(e -> enquiryController.checkAnswer(e) == null)
                             .count();
                     totalUnansweredEnquiries += unanswered;
                 }
@@ -174,14 +170,14 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
         }
 
     @Override
-    public boolean changePassword(User user) {
+    public boolean changePassword(String userName) {
         System.out.println("\n=== Change Password ===");
         System.out.print("Enter Current Password: ");
         String currentPassword = scanner.nextLine();
         System.out.print("Enter New Password: ");
         String newPassword = scanner.nextLine();
 
-        boolean success = authController.changePassword(user.getNric(), currentPassword, newPassword);
+        boolean success = authController.changePassword(authController.checkNric(userName), currentPassword, newPassword);
         if (success) {
             System.out.println("Password changed successfully!");
         } else {
@@ -191,13 +187,13 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
     }
 
     @Override
-    public void displayMainMenu(User user) {
+    public void displayMainMenu(String userName) {
         System.out.println("\n=== Main Menu ===");
         System.out.println("1. View Profile");
         System.out.println("2. Change Password");
         System.out.println("3. Set Project Filters");
     
-        switch (user.getRole()) {
+        switch (authController.checkRole(userName)) {
             case "Applicant" -> System.out.println("4. Applicant Menu");
             case "HDBOfficer" -> {
                 System.out.println("4. HDB Officer Menu");
@@ -220,27 +216,26 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
     }
 
     @Override
-    public void displayProfile(User user) {
+    public void displayProfile(String userName) {
         System.out.println("\n=== Your Profile ===");
-        System.out.println("Name: " + user.getName());
-        System.out.println("NRIC: " + user.getNric());
-        System.out.println("Age: " + user.getAge());
-        System.out.println("Marital Status: " + user.getMaritalStatus());
-        System.out.println("Role: " + user.getRole());
+        System.out.println("Name: " + userName);
+        System.out.println("NRIC: " + authController.checkNric(userName));
+        System.out.println("Age: " + authController.checkAge(userName));
+        System.out.println("Marital Status: " + authController.checkMaritalStatus(userName));
+        System.out.println("Role: " + authController.checkRole(userName));
     }
 
     @Override
     public void setFilters() {
-        Filter filter = filterController.getFilter();
         while (true) {
             System.out.println("\n=== Set Project Filters ===");
             System.out.println("Current filters:");
-            System.out.println("Neighborhood: " + (filter.getNeighborhood() != null ? filter.getNeighborhood() : "Not set"));
-            System.out.println("Flat Types: " + (filter.getFlatTypes() != null ? filter.getFlatTypes() : "Not set"));
-            System.out.println("Opening After: " + (filter.getOpeningAfter() != null ? filter.getOpeningAfter() : "Not set"));
-            System.out.println("Closing Before: " + (filter.getClosingBefore() != null ? filter.getClosingBefore() : "Not set"));
-            System.out.println("Manager: " + (filter.getManager() != null ? filter.getManager() : "Not set"));
-            System.out.println("Officer: " + (filter.getOfficer() != null ? filter.getOfficer() : "Not set"));
+            System.out.println("Neighborhood: " + (filterController.checkNeighborhood() != null ? filterController.checkNeighborhood() : "Not set"));
+            System.out.println("Flat Types: " + (filterController.checkFlatTypes() != null ? filterController.checkFlatTypes() : "Not set"));
+            System.out.println("Opening After: " + (filterController.checkOpeningAfter() != null ? filterController.checkOpeningAfter() : "Not set"));
+            System.out.println("Closing Before: " + (filterController.checkClosingBefore() != null ? filterController.checkClosingBefore() : "Not set"));
+            System.out.println("Manager: " + (filterController.checkManager() != null ? filterController.checkManager() : "Not set"));
+            System.out.println("Officer: " + (filterController.checkOfficer() != null ? filterController.checkOfficer() : "Not set"));
     
             System.out.println("\n0. Back");
             System.out.println("1. Set Neighborhood");
@@ -258,18 +253,18 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
                 }
                 case 1 -> {
                     String neighborhood = getStringInput("Enter neighborhood: ");
-                    filter.setNeighborhood(neighborhood);
+                    filterController.updateNeighborhood(neighborhood);
                 }
                 case 2 -> {
                     String flatTypesStr = getStringInput("Enter flat types (comma-separated, e.g., 2-Room,3-Room): ");
                     List<String> flatTypes = Arrays.asList(flatTypesStr.split(","));
-                    filter.setFlatTypes(flatTypes);
+                    filterController.updateFlatTypes(flatTypes);
                 }
                 case 3 -> {
                     String openingAfterStr = getStringInput("Enter opening after date (yyyy-MM-dd): ");
                     try {
                         LocalDate openingAfter = LocalDate.parse(openingAfterStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                        filter.setOpeningAfter(openingAfter);
+                        filterController.updateOpeningAfter(openingAfter);
                     } catch (DateTimeParseException e) {
                         System.out.println("Invalid date format.");
                     }
@@ -278,26 +273,21 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
                     String closingBeforeStr = getStringInput("Enter closing before date (yyyy-MM-dd): ");
                     try {
                         LocalDate closingBefore = LocalDate.parse(closingBeforeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                        filter.setClosingBefore(closingBefore);
+                        filterController.updateClosingBefore(closingBefore);
                     } catch (DateTimeParseException e) {
                         System.out.println("Invalid date format.");
                     }
                 }
                 case 5 -> {
                     String manager = getStringInput("Enter manager name: ");
-                    filter.setManager(manager);
+                    filterController.updateManager(manager);
                 }
                 case 6 -> {
                     String officer = getStringInput("Enter officer name: ");
-                    filter.setOfficer(officer);
+                    filterController.updateOfficer(officer);
                 }
                 case 7 -> {
-                    filter.setNeighborhood(null);
-                    filter.setFlatTypes(null);
-                    filter.setOpeningAfter(null);
-                    filter.setClosingBefore(null);
-                    filter.setManager(null);
-                    filter.setOfficer(null);
+                    filterController.updateAllFilters();
                     System.out.println("All filters cleared.");
                 }
                 default -> System.out.println("Invalid option!");
@@ -311,7 +301,7 @@ public class UserUI implements AuthenticationUI, ProfileManagementUI, FilterMana
     }
 
     @Override
-    public List<Project> applyFilters(List<Project> projects) {
-        return filterController.applyFilters(projects);
+    public List<String> applyFilters(List<String> projectNames) {
+        return filterController.applyFilters(projectNames);
     }
 }

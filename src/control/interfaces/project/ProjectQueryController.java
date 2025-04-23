@@ -5,12 +5,12 @@ import java.util.List;
 
 public interface ProjectQueryController {
     Project getProject(String projectName);
-    List<Project> getAllProjects();
-    List<Project> getVisibleProjects();
-    List<Project> getProjectsByManager(String managerName);
-    Project getActiveProjectByManager(String managerName);
-    List<Project> getProjectsByOfficer(String officerName);
-    Project getCurrentProjectByOfficer(String officerName);
+    List<String> getAllProjects();
+    List<String> getVisibleProjects();
+    List<String> getProjectsByManager(String managerName);
+    String getActiveProjectByManager(String managerName);
+    List<String> getProjectsByOfficer(String officerName);
+    String getCurrentProjectByOfficer(String officerName);
     boolean projectExists(String projectName);
     int getProjectCount();
 }

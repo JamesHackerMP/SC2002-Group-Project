@@ -14,8 +14,6 @@ public class Enquiry implements EnquiryIdentification, EnquiryContent {
     private String answer;
     private final LocalDateTime createdDate;
     private LocalDateTime answeredDate;
-    private Status status;
-    private int priority; 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd' | 'HH:mm:ss");
 
     public Enquiry(String id, String applicantName, String projectName, String question) {
@@ -24,8 +22,6 @@ public class Enquiry implements EnquiryIdentification, EnquiryContent {
         this.projectName = projectName;
         this.question = question;
         this.createdDate = LocalDateTime.now();
-        this.status = Status.PENDING;
-        this.priority = 3; 
     }
 
     @Override
@@ -48,36 +44,16 @@ public class Enquiry implements EnquiryIdentification, EnquiryContent {
     
     @Override
     public LocalDateTime getAnsweredDate() { return answeredDate; }
-    
-    @Override
-    public Status getStatus() { return status; }
-    
-    @Override
-    public int getPriority() { return priority; }
 
     @Override
     public void setAnswer(String answer) {
         this.answer = answer;
         this.answeredDate = LocalDateTime.now();
-        this.status = Status.ANSWERED;
-    }
-
-    @Override
-    public void setStatus(Status status) { this.status = status; }
-    
-    @Override
-    public void setPriority(int priority) {
-        this.priority = Math.max(1, Math.min(5, priority));
     }
     
     @Override
     public void setQuestion(String question) {
         this.question = question;
-    }
-
-    @Override
-    public void closeEnquiry() {
-        this.status = Status.CLOSED;
     }
 
     @Override

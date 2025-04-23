@@ -3,32 +3,38 @@ package control;
 import control.interfaces.filter.*;
 import entity.Filter;
 import entity.Project;
-import entity.User;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class FilterController implements FilterManagementController {
-    private User currentUser;
+    private String currentUserName;
+    private final AuthenticationController authController;
+    private final ProjectController projectController;
 
-    public FilterController() {
-        this.currentUser = null;
+
+    public FilterController(AuthenticationController authController, ProjectController projectController) {
+        this.currentUserName = null;
+        this.authController = authController;
+        this.projectController = projectController;
     }
 
     @Override
-    public void setCurrentUser(User user) {
-        this.currentUser = user;
+    public void setCurrentUser(String currentUserName) {
+        this.currentUserName = currentUserName;
     }
 
     @Override
     public Filter getFilter() {
-        return currentUser.getFilter();
+        return authController.getUser(currentUserName).getFilter();
     }
 
     @Override
-    public List<Project> applyFilters(List<Project> projects) {
-        Filter filter = currentUser.getFilter();
-        return projects.stream()
+    public List<String> applyFilters(List<String> projectNames) {
+
+        Filter filter = authController.getUser(currentUserName).getFilter();
+        return projectNames.stream()
+                .map(projectName -> projectController.getProject(projectName))
                 .filter(p -> {
                     String neighborhood = filter.getNeighborhood();
                     return neighborhood == null || p.getNeighborhood().equalsIgnoreCase(neighborhood);
@@ -55,6 +61,77 @@ public class FilterController implements FilterManagementController {
                     return officer == null || p.getOfficers().contains(officer);
                 })
                 .sorted(Comparator.comparing(Project::getName))
+                .map(Project::getName)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public String checkNeighborhood() {
+        return getFilter().getNeighborhood();
+    }
+
+    @Override
+    public List<String> checkFlatTypes() {
+        return getFilter().getFlatTypes();
+    }
+
+    @Override
+    public LocalDate checkOpeningAfter() {
+        return getFilter().getOpeningAfter();
+    }
+
+    @Override
+    public LocalDate checkClosingBefore() {
+        return getFilter().getClosingBefore();
+    }
+
+    @Override
+    public String checkManager() {
+        return getFilter().getManager();
+    }
+
+    @Override
+    public String checkOfficer() {
+        return getFilter().getOfficer();
+    }
+
+    @Override
+    public void updateNeighborhood(String neighborhood) {
+        getFilter().setNeighborhood(neighborhood);
+    }
+
+    @Override
+    public void updateFlatTypes(List<String> flatTypes) {
+        getFilter().setFlatTypes(flatTypes);
+    }
+
+    @Override
+    public void updateOpeningAfter(LocalDate openingAfter) {
+        getFilter().setOpeningAfter(openingAfter);
+    }
+
+    @Override
+    public void updateClosingBefore(LocalDate closingBefore) {
+        getFilter().setClosingBefore(closingBefore);
+    }
+
+    @Override
+    public void updateManager(String manager) {
+        getFilter().setManager(manager);
+    }
+
+    @Override
+    public void updateOfficer(String officer) {
+        getFilter().setOfficer(officer);
+    }
+
+    @Override
+    public void updateAllFilters() {
+        getFilter().setNeighborhood(null);
+        getFilter().setFlatTypes(null);
+        getFilter().setOpeningAfter(null);
+        getFilter().setClosingBefore(null);
+        getFilter().setManager(null);
+        getFilter().setOfficer(null);
     }
 }

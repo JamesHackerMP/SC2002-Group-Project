@@ -1,12 +1,24 @@
 package control.interfaces.filter;
 
 import entity.Filter;
-import entity.Project;
-import entity.User;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface FilterManagementController {
-    void setCurrentUser(User user);
+    void setCurrentUser(String userName);
     Filter getFilter();
-    List<Project> applyFilters(List<Project> projects);
+    List<String> applyFilters(List<String> userName);
+    String checkNeighborhood();
+    List<String> checkFlatTypes();
+    LocalDate checkOpeningAfter();
+    LocalDate checkClosingBefore();
+    String checkOfficer();
+    String checkManager();
+    void updateNeighborhood(String neighborhood);
+    void updateFlatTypes(List<String> flatTypes);
+    void updateOpeningAfter(LocalDate openingAfter);
+    void updateClosingBefore(LocalDate closingBefore);
+    void updateManager(String manager);
+    void updateOfficer(String officer);
+    void updateAllFilters();  
 }

@@ -17,22 +17,22 @@ public class Main {
     private final HDBOfficerUI officerUI;
     private final HDBManagerUI managerUI;
 
-    private User currentUser;
+    private String currentUserName;
 
     public Main() {
 
         FileDataHandler fileDataHandler = new CSVFileHandler();
         
         this.authController = new AuthenticationController(fileDataHandler);
-        this.filterController = new FilterController();
         this.projectController = new ProjectController(fileDataHandler);
-        this.applicationController = new ApplicationController(projectController);
+        this.filterController = new FilterController(authController, projectController);
+        this.applicationController = new ApplicationController(projectController, authController);
         this.enquiryController = new EnquiryController();
         this.officerController = new OfficerController(projectController, applicationController);
         this.managerController = new ManagerController(projectController, applicationController, officerController, authController);
 
         this.userUI = new UserUI(authController, filterController, applicationController, projectController, enquiryController);
-        this.applicantUI = new ApplicantUI(projectController, applicationController, enquiryController, filterController);
+        this.applicantUI = new ApplicantUI(projectController, applicationController, enquiryController, authController, filterController);
         this.officerUI = new HDBOfficerUI(projectController, applicationController, enquiryController, officerController,
                 authController, filterController);
         this.managerUI = new HDBManagerUI(projectController, applicationController, enquiryController, managerController, authController, filterController);
@@ -48,8 +48,9 @@ public class Main {
         }));
 
         while (true) {
-            currentUser = userUI.login();
-            if (currentUser != null) {
+            currentUserName = userUI.login();
+            
+            if (authController.getUser(currentUserName) != null) {
                 mainMenuLoop();
             }
         }
@@ -57,17 +58,17 @@ public class Main {
 
     private void mainMenuLoop() {
         while (true) {
-            userUI.displayMainMenu(currentUser);
+            userUI.displayMainMenu(currentUserName);
             int choice = userUI.getMenuChoice();
 
             switch (choice) {
-                case 1 -> userUI.displayProfile(currentUser);
-                case 2 -> userUI.changePassword(currentUser);
+                case 1 -> userUI.displayProfile(currentUserName);
+                case 2 -> userUI.changePassword(currentUserName);
                 case 3 -> userUI.setFilters();
                 case 4 -> handleRoleSpecificMenu();
                 case 5 -> {
-                    if (currentUser instanceof HDBOfficer) {
-                        applicantUI.displayMenu(currentUser);
+                    if (authController.getUser(currentUserName) instanceof HDBOfficer) {
+                        applicantUI.displayMenu(currentUserName);
                     }
                 }
                 case 0 -> {
@@ -80,11 +81,11 @@ public class Main {
     }
 
     private void handleRoleSpecificMenu() {
-        if (currentUser instanceof Applicant) {
-            applicantUI.displayMenu(currentUser);
-        } else if (currentUser instanceof HDBOfficer officer) {
+        if (authController.getUser(currentUserName) instanceof Applicant) {
+            applicantUI.displayMenu(currentUserName);
+        } else if (authController.getUser(currentUserName) instanceof HDBOfficer officer) {
             officerUI.displayMenu(officer);
-        } else if (currentUser instanceof HDBManager manager) {
+        } else if (authController.getUser(currentUserName) instanceof HDBManager manager) {
             managerUI.displayMenu(manager);
         }
     }

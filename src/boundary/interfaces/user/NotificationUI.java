@@ -1,13 +1,11 @@
 package boundary.interfaces.user;
 
-import entity.User;
-
 public interface NotificationUI {
-    void displayNotifications(User user);
+    void displayNotifications(String userName);
     
-    void displayApplicantNotifications(User applicant);
+    void displayApplicantNotifications(String applicant);
     
-    void displayOfficerNotifications(User officer);
+    void displayOfficerNotifications(String officer);
     
-    void displayManagerNotifications(User manager);
+    void displayManagerNotifications(String manager);
 }

@@ -132,7 +132,7 @@ public class HDBOfficerUI implements ProjectManagementUI, BookingManagementUI,
                 System.out.println("Officer: " + filter.getOfficer());
             }
         
-            List<Project> allProjects = filterController.applyFilters(assignedProjects);
+            List<String> allProjects = filterController.applyFilters(assignedProjects);
         
             if (allProjects.isEmpty()) {
                 System.out.println("No projects available with the current filters.");
