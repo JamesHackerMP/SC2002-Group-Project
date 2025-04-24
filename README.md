@@ -21,19 +21,20 @@ This is a command-line application built as part of the SC2002 Object-Oriented D
 
 ```plaintext
 SC2002-Group-Project/
-├── bin/                      # Compiled classes (auto-generated)
+├── bin/                          # Compiled classes (auto-generated)
 ├── src/
-│   ├── boundary/             # User interfaces
-│   ├── control/              # Business logic
-│   ├── entity/               # Data models
-│   ├── utility/              # Helper classes
-│   ├── data/                 # Active CSV data files
-│   ├── data copy/            # Backup of original data 
-│   └── Main.java             # Entry point
+│   ├── boundary/                 # User interfaces
+│   ├── control/                  # Business logic
+│   ├── entity/                   # Data models
+│   ├── utility/                  # Helper classes
+│   ├── data/                     # Active CSV data files
+│   ├── data copy/                # Backup of original data 
+│   └── Main.java                 # Entry point
 ├── report/
-│   ├── final_report.pdf      # Report
-│   └── uml_class_diagram.png # UML class diagram
-├── javadoc/                  # documentation of classes
+├── ├── uml sequence diagrams     # UML SEQUENCE DIAGRAMS
+│   ├── final_report.pdf          # Report
+│   └── class_diagram.drawio.png  # UML class diagram
+├── javadoc/                      # documentation of classes  
 └── README.md
 ```
 ---
