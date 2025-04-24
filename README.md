@@ -33,6 +33,7 @@ SC2002-Group-Project/
 ├── report/
 │   ├── final_report.pdf      # Report
 │   └── uml_class_diagram.png # UML class diagram
+├── javadoc/                  # documentation of classes
 └── README.md
 ```
 ---
